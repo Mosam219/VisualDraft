@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import { Image as CanvasImage } from 'lucide-react';
-import { TypographyP } from '@/components/Typography';
+import { TypographyP } from '@/components/ui/Typography';
 import { motion } from 'framer-motion';
 
 interface Props {

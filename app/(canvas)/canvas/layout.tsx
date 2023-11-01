@@ -1,3 +1,10 @@
+import Header from './__components/Header';
+
 export default function CanvasLayout({ children }: { children: React.ReactNode }) {
-  return <h1>hello{children}</h1>;
+  return (
+    <div className='h-full w-full'>
+      <Header />
+      <div className='h-[95%]'>{children}</div>
+    </div>
+  );
 }

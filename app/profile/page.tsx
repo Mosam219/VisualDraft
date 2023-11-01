@@ -2,7 +2,7 @@
 import userAvatar from '../../static/user_avatar.svg';
 import Image from 'next/image';
 import CanvasTile from './__components/CanvasTile';
-import { TypographyH2, TypographyP } from '@/components/Typography';
+import { TypographyH2, TypographyP } from '@/components/ui/Typography';
 import { motion } from 'framer-motion';
 
 const Profile = () => {
