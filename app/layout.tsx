@@ -6,8 +6,8 @@ import { cn } from '@/lib/utils';
 import { ThemeProvider as NextThemesProvider } from 'next-themes';
 import { type ThemeProviderProps } from 'next-themes/dist/types';
 
-import { SessionProvider } from 'next-auth/react';
-import NextAuthProvider from './context/NextAuthProvider';
+import NextAuthProvider from './components/NextAuthProvider';
+import JotaiProvider from './components/JotaiProvider';
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
@@ -28,14 +28,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang='en'>
       <body className={cn('h-screen font-sans antialiased', inter.variable)}>
         <NextAuthProvider>
-          <ThemeProvider
-            attribute='class'
-            defaultTheme='light'
-            enableSystem
-            disableTransitionOnChange
-          >
-            {children}
-          </ThemeProvider>
+          <JotaiProvider>
+            <ThemeProvider
+              attribute='class'
+              defaultTheme='light'
+              enableSystem
+              disableTransitionOnChange
+            >
+              {children}
+            </ThemeProvider>
+          </JotaiProvider>
         </NextAuthProvider>
       </body>
     </html>
