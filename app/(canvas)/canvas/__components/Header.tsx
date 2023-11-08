@@ -5,6 +5,7 @@ import { useState } from 'react';
 import UserAvatar from './Avatar';
 import { useAtom } from 'jotai';
 import { globalState } from '@/stores/globalStore';
+import ThemeToggle from '@/app/(canvas)/canvas/__components/ThemeToggle';
 
 type SelectionType = 'document' | 'both' | 'canvas';
 
@@ -21,12 +22,14 @@ const Header = () => {
   };
 
   return (
-    <div className='h-[5%] bg-secondary flex justify-between px-5 items-center'>
+    <div className='h-[5%] bg-background dark:border-b-2 flex justify-between px-5 items-center'>
       <TypographyH4 text='Project Name' />
       <div>
         <Button
           className={`w-24 rounded-l-lg ${
-            view === 'document' ? ' bg-slate-50 text-slate-900' : ''
+            view === 'document'
+              ? 'bg-muted text-foreground'
+              : 'bg-card text-foreground hover:bg-accent'
           }`}
           size={'default'}
           variant={'group'}
@@ -35,7 +38,9 @@ const Header = () => {
           Document
         </Button>
         <Button
-          className={`w-24 ${view === 'both' ? ' bg-slate-50 text-slate-900' : ''}`}
+          className={`w-24 ${
+            view === 'both' ? 'bg-muted text-foreground' : 'bg-card text-foreground hover:bg-accent'
+          }`}
           size={'default'}
           variant={'group'}
           onClick={() => handleChangeView('both')}
@@ -43,7 +48,11 @@ const Header = () => {
           Both
         </Button>
         <Button
-          className={`w-24 rounded-r-lg ${view === 'canvas' ? ' bg-slate-50 text-slate-900' : ''}`}
+          className={`w-24 rounded-r-lg ${
+            view === 'canvas'
+              ? 'bg-muted text-foreground'
+              : 'bg-card text-foreground hover:bg-accent'
+          }`}
           size={'default'}
           variant={'group'}
           onClick={() => handleChangeView('canvas')}
@@ -51,7 +60,7 @@ const Header = () => {
           Canvas
         </Button>
       </div>
-      <div>
+      <div className={'w-10'}>
         <UserAvatar />
       </div>
     </div>

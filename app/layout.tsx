@@ -13,7 +13,7 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
 }
 
-export const inter = Inter({
+const inter = Inter({
   subsets: ['latin'],
   variable: '--font-sans',
 });

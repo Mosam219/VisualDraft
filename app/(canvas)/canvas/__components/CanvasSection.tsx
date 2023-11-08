@@ -13,7 +13,7 @@ const CanvasSection = ({ width, fullView }: Props) => {
           : !width
           ? `w-[49%] min-w-[50%] max-w-[70%]`
           : ' min-w-[50%] max-w-[70%]'
-      } h-full`}
+      } h-full relative`}
     >
       <Canvas width={width} />
     </div>

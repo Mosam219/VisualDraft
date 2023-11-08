@@ -5,6 +5,10 @@ import rough from 'roughjs';
 import { RoughCanvas } from 'roughjs/bin/canvas';
 import { Drawable } from 'roughjs/bin/core';
 import { ROUGHNESS } from '../../constants';
+import { useTheme } from 'next-themes';
+import { useAtom, useAtomValue } from 'jotai';
+import { globalState } from '@/stores/globalStore';
+import { MODES } from '@/app/(canvas)/canvas/__components/ToolBar/constants';
 
 interface Props {
   width: number;
@@ -22,15 +26,40 @@ const useCanvas = ({ canvasRef, width }: Props) => {
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
   const [elements, setElements] = useState<Array<ElementType>>([]);
   const roughCanvas = useRef<RoughCanvas>();
+  const store = useAtomValue(globalState);
+  const { mode } = store;
+  console.log(mode);
 
   const generator = rough.generator();
+  const { theme } = useTheme();
 
   const createNewElement = useCallback(
     (x1: number, y1: number, x2: number, y2: number) => {
-      const roughElement = generator.line(x1, y1, x2, y2, { roughness: ROUGHNESS });
+      const getElementBasedOnMode = (mode: keyof typeof MODES) => {
+        switch (mode) {
+          case MODES.line:
+            return generator.line(x1, y1, x2, y2, {
+              roughness: ROUGHNESS,
+              stroke: theme === 'dark' ? 'white' : 'black',
+            });
+            break;
+          case MODES.rectangle:
+            return generator.rectangle(x1, y1, x2 - x1, y2 - y1, {
+              roughness: ROUGHNESS,
+              stroke: theme === 'dark' ? 'white' : 'black',
+            });
+          default:
+            return generator.line(x1, y1, x2, y2, {
+              roughness: ROUGHNESS,
+              stroke: theme === 'dark' ? 'white' : 'black',
+            });
+            break;
+        }
+      };
+      const roughElement: Drawable = getElementBasedOnMode(mode);
       return { x1, y1, x2, y2, roughElement };
     },
-    [generator],
+    [generator, mode],
   );
 
   const handleMouseDown = useCallback(
