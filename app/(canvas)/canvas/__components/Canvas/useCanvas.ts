@@ -28,7 +28,6 @@ const useCanvas = ({ canvasRef, width }: Props) => {
   const roughCanvas = useRef<RoughCanvas>();
   const store = useAtomValue(globalState);
   const { mode } = store;
-  console.log(mode);
 
   const generator = rough.generator();
   const { theme } = useTheme();

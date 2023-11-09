@@ -1,11 +1,11 @@
 'use client';
 import { TypographyH4 } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
 import UserAvatar from './Avatar';
 import { useAtom } from 'jotai';
 import { globalState } from '@/stores/globalStore';
-import ThemeToggle from '@/app/(canvas)/canvas/__components/ThemeToggle';
+import ModeToggle from '@/app/(canvas)/canvas/__components/ThemeToggle';
+import Link from 'next/link';
 
 type SelectionType = 'document' | 'both' | 'canvas';
 
@@ -22,7 +22,7 @@ const Header = () => {
   };
 
   return (
-    <div className='h-[5%] bg-background dark:border-b-2 flex justify-between px-5 items-center'>
+    <div className='h-[5%] bg-background border-b-2 flex justify-between px-5 items-center'>
       <TypographyH4 text='Project Name' />
       <div>
         <Button
@@ -60,8 +60,11 @@ const Header = () => {
           Canvas
         </Button>
       </div>
-      <div className={'w-10'}>
-        <UserAvatar />
+      <div className={'flex gap-2'}>
+        <ModeToggle />
+        <Link href={'/profile'}>
+          <UserAvatar />
+        </Link>
       </div>
     </div>
   );
