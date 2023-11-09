@@ -6,5 +6,5 @@
     -ms-interpolation-mode: nearest-neighbor;
     object-fit: contain;
 
-    @apply  min-w-[100%] max-w-[100%]
+    @apply  min-w-[100%] max-w-[100%];
 }

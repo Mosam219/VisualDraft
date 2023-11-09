@@ -1,8 +1,7 @@
 'use client';
-import { useCallback } from 'react';
-import Quill from 'quill';
-import 'quill/dist/quill.snow.css';
+import 'react-quill/dist/quill.snow.css';
 import './documentSection.css';
+import { useQuill } from 'react-quilljs';
 
 const TOOLBAR_OPTIONS = [
   ['bold', 'italic', 'underline'], // toggled buttons
@@ -25,20 +24,24 @@ const TOOLBAR_OPTIONS = [
 ];
 
 const DocumentSection: React.FC = () => {
-  const documentSectionRef = useCallback((wrapper: HTMLDivElement) => {
-    if (!wrapper) return;
-    wrapper.innerHTML = '';
-    const editor = document.createElement('div');
-    wrapper.append(editor);
+  // const documentSectionRef = useCallback((wrapper: HTMLDivElement) => {
+  //   if (!wrapper) return;
+  //   wrapper.innerHTML = '';
+  //   const editor = document.createElement('div');
+  //   wrapper.append(editor);
+  //   if (!window.document) return;
+  //   new Quill(editor, { theme: 'snow', modules: { toolbar: TOOLBAR_OPTIONS } });
+  // }, []);
 
-    new Quill(editor, { theme: 'snow', modules: { toolbar: TOOLBAR_OPTIONS } });
-  }, []);
+  const { quill, quillRef } = useQuill({ modules: { toolbar: TOOLBAR_OPTIONS }, theme: 'snow' });
 
   return (
     <div
       className='flex flex-1 flex-col h-full border-r-2 border-secondary p-2 resize-x'
-      ref={documentSectionRef}
-    ></div>
+      // ref={documentSectionRef}
+    >
+      <div ref={quillRef} />
+    </div>
   );
 };
 export default DocumentSection;
