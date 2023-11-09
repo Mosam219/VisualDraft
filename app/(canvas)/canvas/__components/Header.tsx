@@ -9,7 +9,7 @@ import Link from 'next/link';
 
 type SelectionType = 'document' | 'both' | 'canvas';
 
-const Header = () => {
+const Header: React.FC = () => {
   const [store, setStore] = useAtom(globalState);
 
   const { view } = store;

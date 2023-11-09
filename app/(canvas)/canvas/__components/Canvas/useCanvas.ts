@@ -58,7 +58,7 @@ const useCanvas = ({ canvasRef, width }: Props) => {
       const roughElement: Drawable = getElementBasedOnMode(mode);
       return { x1, y1, x2, y2, roughElement };
     },
-    [generator, mode],
+    [generator, mode, theme],
   );
 
   const handleMouseDown = useCallback(

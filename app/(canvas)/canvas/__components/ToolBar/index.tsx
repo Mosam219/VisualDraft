@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Minus, Square } from 'lucide-react';
 import { MODES } from '@/app/(canvas)/canvas/__components/ToolBar/constants';
 import { ToolTipComponent } from '@/components/ui/tooltip';
@@ -7,13 +7,15 @@ import { globalState } from '@/stores/globalStore';
 
 const ToolBar: React.FC = () => {
   const [store, setStore] = useAtom(globalState);
-  const changeMode = (mode: string) => {
-    setStore((prev) => ({
-      ...prev,
-      mode: mode as keyof typeof MODES,
-    }));
-    console.log(mode);
-  };
+  const changeMode = useCallback(
+    (mode: string) => {
+      setStore((prev) => ({
+        ...prev,
+        mode: mode as keyof typeof MODES,
+      }));
+    },
+    [setStore],
+  );
   const menus = useMemo(
     () => [
       {
@@ -27,7 +29,7 @@ const ToolBar: React.FC = () => {
         handler: () => changeMode(MODES.rectangle),
       },
     ],
-    [],
+    [changeMode],
   );
   return (
     <div
