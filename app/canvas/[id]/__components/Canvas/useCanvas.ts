@@ -8,7 +8,7 @@ import { ROUGHNESS } from '../../constants';
 import { useTheme } from 'next-themes';
 import { useAtom } from 'jotai';
 import { globalState } from '@/stores/globalStore';
-import { MODES } from '@/app/(canvas)/canvas/__components/ToolBar/constants';
+import { MODES } from '@/app/canvas/[id]/__components/ToolBar/constants';
 import { ElementType } from '@/stores/types';
 
 interface Props {

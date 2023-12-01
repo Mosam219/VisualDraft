@@ -2,7 +2,7 @@
 import { useRef, useState } from 'react';
 import styles from './canvas.module.css';
 import useCanvas from './useCanvas';
-import ToolBar from '@/app/(canvas)/canvas/__components/ToolBar';
+import ToolBar from '@/app/canvas/[id]/__components/ToolBar';
 
 interface Props {
   width: number;

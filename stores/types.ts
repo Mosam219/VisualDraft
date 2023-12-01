@@ -1,4 +1,4 @@
-import { MODES } from '@/app/(canvas)/canvas/__components/ToolBar/constants';
+import { MODES } from '@/app/canvas/[id]/__components/ToolBar/constants';
 import { Drawable } from 'roughjs/bin/core';
 
 export interface GlobalStoreType {

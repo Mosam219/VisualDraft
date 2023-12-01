@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo } from 'react';
 import { BoxSelect, Download, Minus, Square } from 'lucide-react';
-import { MODES } from '@/app/(canvas)/canvas/__components/ToolBar/constants';
+import { MODES } from '@/app/canvas/[id]/__components/ToolBar/constants';
 import { ToolTipComponent } from '@/components/ui/tooltip';
 import { globalState } from '@/stores/globalStore';
 import { useAtom } from 'jotai';
@@ -8,6 +8,7 @@ import { CanvasElementsType } from '@/convex/tasks';
 import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 const ToolBar: React.FC = () => {
   const [
@@ -16,6 +17,9 @@ const ToolBar: React.FC = () => {
     },
     setStore,
   ] = useAtom(globalState);
+
+  const router = useRouter();
+
   const { data: session } = useSession();
 
   const saveCanvas = useMutation(api.tasks.saveCanvas);
@@ -30,7 +34,6 @@ const ToolBar: React.FC = () => {
     [setStore],
   );
   const handleSaveCanvas = async () => {
-    console.log(session);
     if (!session) return;
     const canvasElms = elements.map(
       (item): CanvasElementsType => ({
@@ -42,11 +45,12 @@ const ToolBar: React.FC = () => {
         id: item.id,
       }),
     );
-    console.log(session.user.id);
-    await saveCanvas({
+    const id = await saveCanvas({
       elements: canvasElms,
       userId: session.user.id,
     });
+    router.push(`/canvas/${id}`);
+    console.log(id);
   };
   const menus = useMemo(
     () => [
