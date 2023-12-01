@@ -6,6 +6,8 @@ import { useAtom } from 'jotai';
 import { globalState } from '@/stores/globalStore';
 import ModeToggle from '@/app/(canvas)/canvas/__components/ThemeToggle';
 import Link from 'next/link';
+import { LogOut } from 'lucide-react';
+import { signOut } from 'next-auth/react';
 
 type SelectionType = 'document' | 'both' | 'canvas';
 
@@ -62,6 +64,7 @@ const Header: React.FC = () => {
       </div>
       <div className={'flex gap-2'}>
         <ModeToggle />
+        <LogOut onClick={() => signOut()} />
         <Link href={'/profile'}>
           <UserAvatar />
         </Link>

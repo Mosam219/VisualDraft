@@ -6,34 +6,60 @@ import { RoughCanvas } from 'roughjs/bin/canvas';
 import { Drawable } from 'roughjs/bin/core';
 import { ROUGHNESS } from '../../constants';
 import { useTheme } from 'next-themes';
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtom } from 'jotai';
 import { globalState } from '@/stores/globalStore';
 import { MODES } from '@/app/(canvas)/canvas/__components/ToolBar/constants';
+import { ElementType } from '@/stores/types';
 
 interface Props {
   width: number;
   canvasRef: MutableRefObject<HTMLCanvasElement | null>;
 }
-interface ElementType {
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-  roughElement: Drawable;
+
+interface SelectedElmType extends ElementType {
+  offsetX: number;
+  offsetY: number;
 }
 
 const useCanvas = ({ canvasRef, width }: Props) => {
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
-  const [elements, setElements] = useState<Array<ElementType>>([]);
+  const [selectedElm, setSelectedElm] = useState<SelectedElmType | null>(null);
   const roughCanvas = useRef<RoughCanvas>();
-  const store = useAtomValue(globalState);
-  const { mode } = store;
+
+  const [store, setStore] = useAtom(globalState);
+  const {
+    mode,
+    canvas: { elements },
+  } = store;
 
   const generator = rough.generator();
   const { theme } = useTheme();
 
+  const handleSetElements = useCallback(
+    (elements: Array<ElementType>) => {
+      setStore((prev) => ({
+        ...prev,
+        canvas: {
+          ...prev.canvas,
+          elements: elements,
+        },
+      }));
+    },
+    [setStore],
+  );
+
   const createNewElement = useCallback(
-    (x1: number, y1: number, x2: number, y2: number) => {
+    (
+      id: number,
+      x1: number,
+      y1: number,
+      x2: number,
+      y2: number,
+      mode: keyof typeof MODES,
+    ): ElementType | undefined => {
+      if (MODES.selection === mode) {
+        return;
+      }
       const getElementBasedOnMode = (mode: keyof typeof MODES) => {
         switch (mode) {
           case MODES.line:
@@ -52,13 +78,38 @@ const useCanvas = ({ canvasRef, width }: Props) => {
               roughness: ROUGHNESS,
               stroke: theme === 'dark' ? 'white' : 'black',
             });
-            break;
         }
       };
       const roughElement: Drawable = getElementBasedOnMode(mode);
-      return { x1, y1, x2, y2, roughElement };
+      return { id, x1, y1, x2, y2, mode, roughElement };
     },
-    [generator, mode, theme],
+    [generator, theme],
+  );
+
+  const isWithinElement = (element: ElementType, x: number, y: number) => {
+    const getDistance = (x1: number, y1: number, x2: number, y2: number) =>
+      Math.sqrt(Math.pow(x1 - x2, 2) - Math.pow(y1 - y2, 2));
+    const mode = element.mode;
+    switch (mode) {
+      case MODES.line:
+        console.log(element.x1, element.y1);
+        console.log(element.x2, element.y2);
+        console.log(x, y);
+        const offset =
+          getDistance(element.x1, element.y1, element.x2, element.y2) -
+          getDistance(element.x1, element.y1, x, y) -
+          getDistance(x, y, element.x2, element.y2);
+        return offset <= 1;
+      case MODES.rectangle:
+        return element.x1 <= x && element.x2 >= x && element.y1 <= y && element.y2 >= y;
+    }
+  };
+
+  const getElementsAtPosition = useCallback(
+    (x: number, y: number, elements: Array<ElementType>) => {
+      return elements.find((element) => isWithinElement(element, x, y));
+    },
+    [],
   );
 
   const handleMouseDown = useCallback(
@@ -67,40 +118,77 @@ const useCanvas = ({ canvasRef, width }: Props) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
       const { clientX, clientY } = event;
-      const element = createNewElement(
-        clientX - canvas.getBoundingClientRect().left,
-        clientY - canvas.getBoundingClientRect().top,
-        clientX - canvas.getBoundingClientRect().left,
-        clientY - canvas.getBoundingClientRect().top,
-      );
-      setElements((prev) => [...prev, element]);
+      const x = clientX - canvas.getBoundingClientRect().left;
+      const y = clientY - canvas.getBoundingClientRect().top;
+
+      if (mode === MODES.selection) {
+        const elm = getElementsAtPosition(x, y, elements);
+        if (elm) setSelectedElm({ ...elm, offsetX: x - elm.x1, offsetY: y - elm.y1 });
+      } else {
+        const element = createNewElement(
+          elements.length,
+          clientX - canvas.getBoundingClientRect().left,
+          clientY - canvas.getBoundingClientRect().top,
+          clientX - canvas.getBoundingClientRect().left,
+          clientY - canvas.getBoundingClientRect().top,
+          mode,
+        );
+        if (element) handleSetElements([...elements, element]);
+      }
     },
-    [canvasRef, createNewElement],
+    [canvasRef, createNewElement, elements, getElementsAtPosition, mode, handleSetElements],
   );
 
   const handleMouseUp = useCallback(() => {
+    setSelectedElm(null);
     setIsDrawing(false);
   }, []);
+
+  const updateElements = useCallback(
+    (id: number, updatedElement: ElementType) => {
+      const elementsCopy = [...elements];
+      elementsCopy[id] = updatedElement;
+      handleSetElements(elementsCopy);
+    },
+    [elements, handleSetElements],
+  );
 
   const handleMouseMove = useCallback(
     (event: MouseEvent) => {
       if (!isDrawing) return;
       const canvas = canvasRef.current;
       if (!canvas) return;
+
       const { clientX, clientY } = event;
-      const latestElementIdx = elements.length - 1;
-      const { x1, y1 } = elements[latestElementIdx];
-      const updatedElement = createNewElement(
-        x1,
-        y1,
-        clientX - canvas.getBoundingClientRect().left,
-        clientY - canvas.getBoundingClientRect().top,
-      );
-      const elementsCopy = [...elements];
-      elementsCopy[latestElementIdx] = updatedElement;
-      setElements(elementsCopy);
+      const x = clientX - canvas.getBoundingClientRect().left;
+      const y = clientY - canvas.getBoundingClientRect().top;
+
+      if (mode === MODES.selection) {
+        if (!selectedElm) return;
+        const { id, mode, x1, y1, offsetX, offsetY } = selectedElm;
+        const height = Math.abs(selectedElm.x1 - selectedElm.x2);
+        const width = Math.abs(selectedElm.y1 - selectedElm.y2);
+        const newX = x - offsetX;
+        const newY = y - offsetY;
+
+        const updatedElm = createNewElement(id, newX, newY, newX + height, newY + width, mode);
+        if (updatedElm) {
+          updateElements(id, updatedElm);
+        }
+      } else {
+        const latestElementIdx = elements.length - 1;
+
+        if (latestElementIdx < 0) return;
+
+        const { id, x1, y1 } = elements[latestElementIdx];
+        const updatedElement = createNewElement(id, x1, y1, x, y, mode);
+
+        if (!updatedElement) return;
+
+        updateElements(id, updatedElement);
+      }
     },
-    [canvasRef, elements, isDrawing, createNewElement],
+    [canvasRef, elements, isDrawing, createNewElement, mode, selectedElm, updateElements],
   );
 
   const addCanvasEventListeners = useCallback(() => {
@@ -137,12 +225,18 @@ const useCanvas = ({ canvasRef, width }: Props) => {
     canvas.width = Math.floor(canvasWidth * scale);
     canvas.height = Math.floor(canvasHeight * scale);
 
-    // ctx.clearRect(0, 0, canvas.width, canvas.height);
-
     // Normalize coordinate system to use CSS pixels.
     ctx.scale(2, 2);
     roughCanvas.current = rough.canvas(canvas);
   }, [width, canvasRef]);
+
+  useEffect(() => {
+    const elm = elements.map(
+      (item): ElementType =>
+        createNewElement(item.id, item.x1, item.y1, item.x2, item.y2, item.mode)!!,
+    );
+    handleSetElements(elm);
+  }, [theme]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -155,4 +249,5 @@ const useCanvas = ({ canvasRef, width }: Props) => {
     });
   }, [elements, roughCanvas, canvasRef, width]);
 };
+
 export default useCanvas;

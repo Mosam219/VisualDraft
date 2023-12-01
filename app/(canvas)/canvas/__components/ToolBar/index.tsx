@@ -1,12 +1,25 @@
 import React, { useCallback, useMemo } from 'react';
-import { Minus, Square } from 'lucide-react';
+import { BoxSelect, Download, Minus, Square } from 'lucide-react';
 import { MODES } from '@/app/(canvas)/canvas/__components/ToolBar/constants';
 import { ToolTipComponent } from '@/components/ui/tooltip';
-import { useAtom } from 'jotai';
 import { globalState } from '@/stores/globalStore';
+import { useAtom } from 'jotai';
+import { CanvasElementsType } from '@/convex/tasks';
+import { useMutation } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import { useSession } from 'next-auth/react';
 
 const ToolBar: React.FC = () => {
-  const [store, setStore] = useAtom(globalState);
+  const [
+    {
+      canvas: { elements },
+    },
+    setStore,
+  ] = useAtom(globalState);
+  const { data: session } = useSession();
+
+  const saveCanvas = useMutation(api.tasks.saveCanvas);
+
   const changeMode = useCallback(
     (mode: string) => {
       setStore((prev) => ({
@@ -16,6 +29,25 @@ const ToolBar: React.FC = () => {
     },
     [setStore],
   );
+  const handleSaveCanvas = async () => {
+    console.log(session);
+    if (!session) return;
+    const canvasElms = elements.map(
+      (item): CanvasElementsType => ({
+        mode: item.mode,
+        x1: item.x1,
+        x2: item.x2,
+        y2: item.y2,
+        y1: item.y1,
+        id: item.id,
+      }),
+    );
+    console.log(session.user.id);
+    await saveCanvas({
+      elements: canvasElms,
+      userId: session.user.id,
+    });
+  };
   const menus = useMemo(
     () => [
       {
@@ -28,8 +60,18 @@ const ToolBar: React.FC = () => {
         toolTip: 'Rectangle',
         handler: () => changeMode(MODES.rectangle),
       },
+      {
+        component: <BoxSelect />,
+        toolTip: 'selection',
+        handler: () => changeMode(MODES.selection),
+      },
+      {
+        component: <Download />,
+        toolTip: 'save',
+        handler: () => handleSaveCanvas(),
+      },
     ],
-    [changeMode],
+    [changeMode, elements],
   );
   return (
     <div

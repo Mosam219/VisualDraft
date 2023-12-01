@@ -8,6 +8,7 @@ import { type ThemeProviderProps } from 'next-themes/dist/types';
 
 import NextAuthProvider from './components/NextAuthProvider';
 import JotaiProvider from './components/JotaiProvider';
+import ConvexClientProvider from '@/app/components/ConvexClientProvider';
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
@@ -35,7 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               enableSystem
               disableTransitionOnChange
             >
-              {children}
+              <ConvexClientProvider>{children}</ConvexClientProvider>
             </ThemeProvider>
           </JotaiProvider>
         </NextAuthProvider>
