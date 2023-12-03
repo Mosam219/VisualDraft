@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import UserAvatar from './Avatar';
 import { useAtom } from 'jotai';
 import { globalState } from '@/stores/globalStore';
-import ModeToggle from '@/app/canvas/[id]/__components/ThemeToggle';
+import ModeToggle from '@/app/canvas/[canvasId]/__components/ThemeToggle';
 import Link from 'next/link';
 import { LogOut } from 'lucide-react';
 import { signOut } from 'next-auth/react';

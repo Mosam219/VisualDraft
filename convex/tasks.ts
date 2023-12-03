@@ -1,4 +1,5 @@
-import { mutation } from './_generated/server';
+import { v } from 'convex/values';
+import { mutation, query } from './_generated/server';
 
 export interface CanvasElementsType {
   id: number;
@@ -13,5 +14,15 @@ export const saveCanvas = mutation({
   handler: async (ctx, args: { elements: Array<CanvasElementsType>; userId: string }) => {
     const taskId = await ctx.db.insert('canvas', { elements: args.elements, userId: args.userId });
     return taskId;
+  },
+});
+
+export const getCanvasById = query({
+  args: {
+    id: v.id('canvas'),
+  },
+  handler: async (ctx, args) => {
+    if (!args.id) return;
+    return await ctx.db.get(args.id);
   },
 });

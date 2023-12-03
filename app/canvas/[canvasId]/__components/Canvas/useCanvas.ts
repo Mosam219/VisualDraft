@@ -8,12 +8,16 @@ import { ROUGHNESS } from '../../constants';
 import { useTheme } from 'next-themes';
 import { useAtom } from 'jotai';
 import { globalState } from '@/stores/globalStore';
-import { MODES } from '@/app/canvas/[id]/__components/ToolBar/constants';
+import { MODES } from '@/app/canvas/[canvasId]/__components/ToolBar/constants';
 import { ElementType } from '@/stores/types';
+import { useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import { Id } from '@/convex/_generated/dataModel';
 
 interface Props {
   width: number;
   canvasRef: MutableRefObject<HTMLCanvasElement | null>;
+  canvasId: string;
 }
 
 interface SelectedElmType extends ElementType {
@@ -21,7 +25,7 @@ interface SelectedElmType extends ElementType {
   offsetY: number;
 }
 
-const useCanvas = ({ canvasRef, width }: Props) => {
+const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
   const [selectedElm, setSelectedElm] = useState<SelectedElmType | null>(null);
   const roughCanvas = useRef<RoughCanvas>();
@@ -209,6 +213,26 @@ const useCanvas = ({ canvasRef, width }: Props) => {
       removeCanvasEventListeners();
     };
   }, [addCanvasEventListeners, removeCanvasEventListeners]);
+
+  const storedCanvas = useQuery(api.tasks.getCanvasById, { id: canvasId as Id<'canvas'> });
+  console.log(storedCanvas);
+
+  useEffect(() => {
+    if (!storedCanvas) return;
+    handleSetElements(
+      storedCanvas?.elements?.map(
+        (item) =>
+          createNewElement(
+            item.id,
+            item.x1,
+            item.y1,
+            item.x2,
+            item.y2,
+            item.mode as keyof typeof MODES,
+          )!!,
+      ) || [],
+    );
+  }, [storedCanvas]);
 
   useLayoutEffect(() => {
     const canvas = canvasRef.current;

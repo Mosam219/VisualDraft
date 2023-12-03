@@ -5,8 +5,15 @@ import CanvasSection from './__components/CanvasSection';
 import DocumentSection from './__components/DocumentSection';
 import { useAtom } from 'jotai';
 import { globalState } from '@/stores/globalStore';
+import { Id } from '@/convex/_generated/dataModel';
 
-function CanvasPage() {
+function CanvasPage({
+  params: { canvasId },
+}: {
+  params: {
+    canvasId: Id<'canvas'>;
+  };
+}) {
   const [store] = useAtom(globalState);
   const [canvasSectionWidth, setCanvasSectionWidth] = useState<number>(0);
 
@@ -20,10 +27,12 @@ function CanvasPage() {
         <>
           <DocumentSection />
           <Border changeCanvasSectionWidth={changeCanvasSectionWidth} />
-          <CanvasSection width={canvasSectionWidth} />
+          <CanvasSection canvasId={canvasId} width={canvasSectionWidth} />
         </>
       ) : null}
-      {store.view === 'canvas' ? <CanvasSection width={canvasSectionWidth} fullView /> : null}
+      {store.view === 'canvas' ? (
+        <CanvasSection canvasId={canvasId} width={canvasSectionWidth} fullView />
+      ) : null}
       {store.view === 'document' ? <DocumentSection /> : null}
     </div>
   );

@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo } from 'react';
 import { BoxSelect, Download, Minus, Square } from 'lucide-react';
-import { MODES } from '@/app/canvas/[id]/__components/ToolBar/constants';
+import { MODES } from '@/app/canvas/[canvasId]/__components/ToolBar/constants';
 import { ToolTipComponent } from '@/components/ui/tooltip';
 import { globalState } from '@/stores/globalStore';
 import { useAtom } from 'jotai';

@@ -2,8 +2,9 @@ import Canvas from './Canvas';
 interface Props {
   width: number;
   fullView?: boolean;
+  canvasId: string;
 }
-const CanvasSection = ({ width, fullView }: Props) => {
+const CanvasSection = ({ width, fullView, canvasId }: Props) => {
   return (
     <div
       {...(width && { style: { width: `${width}px` } })}
@@ -15,7 +16,7 @@ const CanvasSection = ({ width, fullView }: Props) => {
           : ' min-w-[50%] max-w-[70%]'
       } h-full relative`}
     >
-      <Canvas width={width} />
+      <Canvas width={width} canvasId={canvasId} />
     </div>
   );
 };
