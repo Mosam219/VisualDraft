@@ -11,12 +11,23 @@ interface Props {
 
 const Canvas: React.FC<Props> = ({ width, canvasId }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  useCanvas({ canvasRef: canvasRef, width: width, canvasId: canvasId });
+  const { handleMouseMove, handleMouseUp, handleMouseDown } = useCanvas({
+    canvasRef: canvasRef,
+    width: width,
+    canvasId: canvasId,
+  });
 
   return (
     <>
       <ToolBar />
-      <canvas ref={canvasRef} id='canvas' className={styles.canvas} />
+      <canvas
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+        onMouseMove={handleMouseMove}
+        ref={canvasRef}
+        id='canvas'
+        className={styles.canvas}
+      />
     </>
   );
 };

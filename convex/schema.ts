@@ -13,6 +13,7 @@ export default defineSchema({
         mode: v.string(),
       }),
     ),
+    docContent: v.string(),
     userId: v.string(),
   }),
 });

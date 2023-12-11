@@ -62,9 +62,9 @@ const Header: React.FC = () => {
           Canvas
         </Button>
       </div>
-      <div className={'flex gap-2'}>
+      <div className={'flex gap-2 items-center'}>
         <ModeToggle />
-        <LogOut onClick={() => signOut()} />
+        <LogOut className={'cursor-pointer'} onClick={() => signOut()} />
         <Link href={'/profile'}>
           <UserAvatar />
         </Link>

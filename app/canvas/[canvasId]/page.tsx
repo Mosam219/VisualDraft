@@ -25,7 +25,7 @@ function CanvasPage({
     <div className=' h-full w-full flex'>
       {store.view === 'both' ? (
         <>
-          <DocumentSection />
+          <DocumentSection docId={canvasId} />
           <Border changeCanvasSectionWidth={changeCanvasSectionWidth} />
           <CanvasSection canvasId={canvasId} width={canvasSectionWidth} />
         </>
@@ -33,7 +33,7 @@ function CanvasPage({
       {store.view === 'canvas' ? (
         <CanvasSection canvasId={canvasId} width={canvasSectionWidth} fullView />
       ) : null}
-      {store.view === 'document' ? <DocumentSection /> : null}
+      {store.view === 'document' ? <DocumentSection docId={canvasId} /> : null}
     </div>
   );
 }

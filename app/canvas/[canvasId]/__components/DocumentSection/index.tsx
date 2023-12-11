@@ -2,6 +2,11 @@
 import 'react-quill/dist/quill.snow.css';
 import './documentSection.css';
 import { useQuill } from 'react-quilljs';
+import { useEffect, useState } from 'react';
+import { useMutation, useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import { Id } from '@/convex/_generated/dataModel';
+import debounce from 'lodash/debounce';
 
 const TOOLBAR_OPTIONS = [
   ['bold', 'italic', 'underline'], // toggled buttons
@@ -23,7 +28,7 @@ const TOOLBAR_OPTIONS = [
   // ['clean'], // remove formatting button
 ];
 
-const DocumentSection: React.FC = () => {
+const DocumentSection: React.FC<{ docId: string }> = ({ docId }) => {
   // const documentSectionRef = useCallback((wrapper: HTMLDivElement) => {
   //   if (!wrapper) return;
   //   wrapper.innerHTML = '';
@@ -32,8 +37,36 @@ const DocumentSection: React.FC = () => {
   //   if (!window.document) return;
   //   new Quill(editor, { theme: 'snow', modules: { toolbar: TOOLBAR_OPTIONS } });
   // }, []);
-
+  const [firstLoad, setFirstLoad] = useState<boolean>(true);
   const { quill, quillRef } = useQuill({ modules: { toolbar: TOOLBAR_OPTIONS }, theme: 'snow' });
+  const updateDoc = useMutation(api.tasks.updateDoc);
+  const getDoc = useQuery(api.tasks.getDoc, { id: docId as Id<'canvas'> });
+  const saveToDb = async (content: string) => {
+    console.log('saving to db', content, docId);
+    await updateDoc({ content: content, docId: docId as Id<'canvas'> });
+  };
+  const delayedSave = debounce(async (content: string) => {
+    await saveToDb(content);
+  }, 3000);
+
+  const changeHandler = () => {
+    if (!quill) return;
+    const content = quill.root.innerHTML;
+    delayedSave(content);
+  };
+
+  useEffect(() => {
+    if (!quill) return;
+    if (getDoc?.docContent && firstLoad) {
+      setFirstLoad(false);
+      quill.clipboard.dangerouslyPasteHTML(getDoc?.docContent);
+    }
+
+    quill.on('text-change', changeHandler);
+    return () => {
+      quill.off('text-change', changeHandler); // Clean up the event listener
+    };
+  }, [quill, getDoc]);
 
   return (
     <div

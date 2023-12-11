@@ -19,6 +19,7 @@
     "convex": "^1.5.1",
     "framer-motion": "^10.16.4",
     "jotai": "^2.5.0",
+    "lodash": "^4.17.21",
     "lucide-react": "^0.288.0",
     "next": "^14.0.1",
     "next-auth": "^4.24.4",

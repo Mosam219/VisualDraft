@@ -48,9 +48,9 @@ const ToolBar: React.FC = () => {
     const id = await saveCanvas({
       elements: canvasElms,
       userId: session.user.id,
+      docContent: '',
     });
     router.push(`/canvas/${id}`);
-    console.log(id);
   };
   const menus = useMemo(
     () => [

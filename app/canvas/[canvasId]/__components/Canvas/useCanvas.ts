@@ -10,9 +10,13 @@ import { useAtom } from 'jotai';
 import { globalState } from '@/stores/globalStore';
 import { MODES } from '@/app/canvas/[canvasId]/__components/ToolBar/constants';
 import { ElementType } from '@/stores/types';
-import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
+import { useMutation, useQuery } from 'convex/react';
+import { useSession } from 'next-auth/react';
+import { CanvasElementsType } from '@/convex/tasks';
+import { useRouter } from 'next/navigation';
+import { debounce } from 'lodash';
 
 interface Props {
   width: number;
@@ -23,14 +27,25 @@ interface Props {
 interface SelectedElmType extends ElementType {
   offsetX: number;
   offsetY: number;
+  position: string | null; // if it is available then nearby or else inside
 }
 
 const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
   const [selectedElm, setSelectedElm] = useState<SelectedElmType | null>(null);
+  const [firstLoad, setFirstLoad] = useState<boolean>(true);
   const roughCanvas = useRef<RoughCanvas>();
 
+  const router = useRouter();
+
+  const { data: session } = useSession();
+
   const [store, setStore] = useAtom(globalState);
+  const updateCanvas = useMutation(api.tasks.updateCanvas);
+  const saveCanvas = useMutation(api.tasks.saveCanvas);
+
+  const storedCanvas = useQuery(api.tasks.getDoc, { id: canvasId as Id<'canvas'> });
+
   const {
     mode,
     canvas: { elements },
@@ -51,6 +66,33 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
     },
     [setStore],
   );
+
+  const handleUpdateCanvas = async (elements: ElementType[]) => {
+    if (!session) return;
+    console.log('updating');
+    const canvasElms = elements.map(
+      (item): CanvasElementsType => ({
+        mode: item.mode,
+        x1: item.x1,
+        x2: item.x2,
+        y2: item.y2,
+        y1: item.y1,
+        id: item.id,
+      }),
+    );
+    try {
+      await updateCanvas({
+        elements: canvasElms,
+        docId: canvasId as Id<'canvas'>,
+      });
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  const delayedSave = debounce(async (elements: ElementType[]) => {
+    await handleUpdateCanvas(elements);
+  }, 3000);
 
   const createNewElement = useCallback(
     (
@@ -92,18 +134,15 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
 
   const isWithinElement = (element: ElementType, x: number, y: number) => {
     const getDistance = (x1: number, y1: number, x2: number, y2: number) =>
-      Math.sqrt(Math.pow(x1 - x2, 2) - Math.pow(y1 - y2, 2));
+      Math.sqrt(Math.pow(Math.abs(x1 - x2), 2) - Math.pow(Math.abs(y1 - y2), 2));
     const mode = element.mode;
     switch (mode) {
       case MODES.line:
-        console.log(element.x1, element.y1);
-        console.log(element.x2, element.y2);
-        console.log(x, y);
         const offset =
           getDistance(element.x1, element.y1, element.x2, element.y2) -
           getDistance(element.x1, element.y1, x, y) -
           getDistance(x, y, element.x2, element.y2);
-        return offset <= 1;
+        return offset && Math.abs(offset) <= 1;
       case MODES.rectangle:
         return element.x1 <= x && element.x2 >= x && element.y1 <= y && element.y2 >= y;
     }
@@ -117,7 +156,7 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
   );
 
   const handleMouseDown = useCallback(
-    (event: MouseEvent) => {
+    (event: React.MouseEvent<HTMLCanvasElement>) => {
       setIsDrawing(true);
       const canvas = canvasRef.current;
       if (!canvas) return;
@@ -127,7 +166,11 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
 
       if (mode === MODES.selection) {
         const elm = getElementsAtPosition(x, y, elements);
-        if (elm) setSelectedElm({ ...elm, offsetX: x - elm.x1, offsetY: y - elm.y1 });
+        const nearByElm = findElementNearBy(x, y, elements);
+        if (nearByElm)
+          setSelectedElm({ ...nearByElm.elm, offsetX: 0, offsetY: 0, position: nearByElm.angle });
+        else if (elm)
+          setSelectedElm({ ...elm, offsetX: x - elm.x1, offsetY: y - elm.y1, position: null });
       } else {
         const element = createNewElement(
           elements.length,
@@ -143,12 +186,38 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
     [canvasRef, createNewElement, elements, getElementsAtPosition, mode, handleSetElements],
   );
 
-  const handleMouseUp = useCallback(() => {
+  const adjustElementCoordinates = (element: ElementType) => {
+    const { mode, x1, y1, x2, y2 } = element;
+    if (mode === 'rectangle') {
+      const minX = Math.min(x1, x2);
+      const maxX = Math.max(x1, x2);
+      const minY = Math.min(y1, y2);
+      const maxY = Math.max(y1, y2);
+      return { x1: minX, y1: minY, x2: maxX, y2: maxY };
+    } else {
+      if (x1 < x2 || (x1 === x2 && y1 < y2)) {
+        return { x1, y1, x2, y2 };
+      } else {
+        return { x1: x2, y1: y2, x2: x1, y2: y1 };
+      }
+    }
+  };
+
+  const handleMouseUp = () => {
+    if (selectedElm) {
+      const { id, position } = selectedElm;
+      const { mode } = elements[id];
+      if (position) {
+        const { x1, y1, x2, y2 } = adjustElementCoordinates(elements[id]);
+        const updatedElm = createNewElement(id, x1, y1, x2, y2, mode);
+        if (updatedElm) updateElement(id, updatedElm);
+      }
+    }
     setSelectedElm(null);
     setIsDrawing(false);
-  }, []);
+  };
 
-  const updateElements = useCallback(
+  const updateElement = useCallback(
     (id: number, updatedElement: ElementType) => {
       const elementsCopy = [...elements];
       elementsCopy[id] = updatedElement;
@@ -157,9 +226,66 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
     [elements, handleSetElements],
   );
 
+  const getElementAtPosition = (x: number, y: number, elements: ElementType[]) => {
+    return elements.find((element) => isWithinElement(element, x, y));
+  };
+
+  const cursorForPosition = (position: string) => {
+    switch (position) {
+      case 'tl':
+      case 'br':
+      case 'start':
+      case 'end':
+        return 'nwse-resize';
+      case 'tr':
+      case 'bl':
+        return 'nesw-resize';
+      default:
+        return 'move';
+    }
+  };
+
+  const isElementNearBy = (x: number, y: number, element: ElementType) => {
+    const nearPoint = (x: number, y: number, x1: number, y1: number, name: string) =>
+      Math.abs(x - x1) < 5 && Math.abs(y - y1) < 5 ? name : null;
+    const { x1, x2, y1, y2 } = element;
+    const topLeft = nearPoint(x, y, x1, y1, 'tl');
+    const topRight = nearPoint(x, y, x2, y1, 'tr');
+    const bottomLeft = nearPoint(x, y, x1, y2, 'bl');
+    const bottomRight = nearPoint(x, y, x2, y2, 'br');
+    return topLeft || topRight || bottomLeft || bottomRight || null;
+  };
+
+  const findElementNearBy = (x: number, y: number, elements: ElementType[]) => {
+    const elem = elements.find((item) => isElementNearBy(x, y, item));
+    return elem ? { elm: elem, angle: isElementNearBy(x, y, elem) } : null;
+  };
+
+  const resizedCoordinates = (
+    x: number,
+    y: number,
+    position: string,
+    coordinates: { x1: number; y1: number; x2: number; y2: number },
+  ) => {
+    const { x1, y1, x2, y2 } = coordinates;
+    switch (position) {
+      case 'tl':
+      case 'start':
+        return { x1: x, y1: y, x2, y2 };
+      case 'tr':
+        return { x1, y1: y, x2: x, y2 };
+      case 'bl':
+        return { x1: x, y1, x2, y2: y };
+      case 'br':
+      case 'end':
+        return { x1, y1, x2: x, y2: y };
+      default:
+        return null; //should not really get here...
+    }
+  };
+
   const handleMouseMove = useCallback(
-    (event: MouseEvent) => {
-      if (!isDrawing) return;
+    (event: React.MouseEvent<HTMLCanvasElement>) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
 
@@ -168,16 +294,45 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
       const y = clientY - canvas.getBoundingClientRect().top;
 
       if (mode === MODES.selection) {
-        if (!selectedElm) return;
-        const { id, mode, x1, y1, offsetX, offsetY } = selectedElm;
-        const height = Math.abs(selectedElm.x1 - selectedElm.x2);
-        const width = Math.abs(selectedElm.y1 - selectedElm.y2);
-        const newX = x - offsetX;
-        const newY = y - offsetY;
+        const element = getElementAtPosition(x, y, elements);
+        const nearByElement = findElementNearBy(x, y, elements);
+        event.currentTarget.style.cursor = nearByElement?.angle
+          ? cursorForPosition(nearByElement.angle)
+          : element
+          ? 'move'
+          : 'default';
+      }
+      if (!isDrawing) return;
 
-        const updatedElm = createNewElement(id, newX, newY, newX + height, newY + width, mode);
-        if (updatedElm) {
-          updateElements(id, updatedElm);
+      if (mode === MODES.selection) {
+        if (!selectedElm) return;
+        const { id, mode, x1, y1, x2, y2, offsetX, offsetY, position } = selectedElm;
+        if (position) {
+          // nearby
+          const coordinates = resizedCoordinates(x, y, position, { x1, y1, x2, y2 });
+          if (!coordinates) return;
+          const updatedElm = createNewElement(
+            id,
+            coordinates.x1,
+            coordinates.y1,
+            coordinates.x2,
+            coordinates.y2,
+            mode,
+          );
+          if (updatedElm) {
+            updateElement(id, updatedElm);
+          }
+        } else {
+          // inside
+          const width = selectedElm.x2 - selectedElm.x1;
+          const height = selectedElm.y2 - selectedElm.y1;
+          const newX = x - offsetX;
+          const newY = y - offsetY;
+
+          const updatedElm = createNewElement(id, newX, newY, newX + width, newY + height, mode);
+          if (updatedElm) {
+            updateElement(id, updatedElm);
+          }
         }
       } else {
         const latestElementIdx = elements.length - 1;
@@ -189,36 +344,15 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
 
         if (!updatedElement) return;
 
-        updateElements(id, updatedElement);
+        updateElement(id, updatedElement);
       }
     },
-    [canvasRef, elements, isDrawing, createNewElement, mode, selectedElm, updateElements],
+    [canvasRef, elements, isDrawing, createNewElement, mode, selectedElm, updateElement],
   );
 
-  const addCanvasEventListeners = useCallback(() => {
-    canvasRef?.current?.addEventListener('mousedown', handleMouseDown);
-    canvasRef?.current?.addEventListener('mouseup', handleMouseUp);
-    canvasRef?.current?.addEventListener('mousemove', handleMouseMove);
-  }, [canvasRef, handleMouseDown, handleMouseUp, handleMouseMove]);
-
-  const removeCanvasEventListeners = useCallback(() => {
-    canvasRef?.current?.removeEventListener('mousedown', handleMouseDown);
-    canvasRef?.current?.removeEventListener('mouseup', handleMouseUp);
-    canvasRef?.current?.removeEventListener('mousemove', handleMouseMove);
-  }, [canvasRef, handleMouseDown, handleMouseUp, handleMouseMove]);
-
   useEffect(() => {
-    addCanvasEventListeners();
-    return () => {
-      removeCanvasEventListeners();
-    };
-  }, [addCanvasEventListeners, removeCanvasEventListeners]);
-
-  const storedCanvas = useQuery(api.tasks.getCanvasById, { id: canvasId as Id<'canvas'> });
-  console.log(storedCanvas);
-
-  useEffect(() => {
-    if (!storedCanvas) return;
+    if (!storedCanvas || !firstLoad) return;
+    setFirstLoad(false);
     handleSetElements(
       storedCanvas?.elements?.map(
         (item) =>
@@ -271,7 +405,14 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
     elements.map(({ roughElement }) => {
       roughCanvas?.current?.draw(roughElement);
     });
+    delayedSave(elements);
   }, [elements, roughCanvas, canvasRef, width]);
+
+  return {
+    handleMouseDown,
+    handleMouseMove,
+    handleMouseUp,
+  };
 };
 
 export default useCanvas;
