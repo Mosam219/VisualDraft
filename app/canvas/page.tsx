@@ -1,32 +1,23 @@
 'use client';
-import { useState } from 'react';
-import Border from './[canvasId]/__components/Border';
-import CanvasSection from './[canvasId]/__components/CanvasSection';
-import DocumentSection from './[canvasId]/__components/DocumentSection';
-import { useAtom } from 'jotai';
-import { globalState } from '@/stores/globalStore';
+import { Button } from '@/components/ui/button';
+import NewCanvasDialog from './[canvasId]/__components/NewCanvasModal';
+import { useRouter } from 'next/navigation';
+import { TypographyH1, TypographyH2 } from '@/components/ui/Typography';
 
 function CanvasPage({ params }: { params: { canvasId: string } }) {
-  const [store] = useAtom(globalState);
-  const [canvasSectionWidth, setCanvasSectionWidth] = useState<number>(0);
-
-  const changeCanvasSectionWidth = (newWidth: number) => {
-    setCanvasSectionWidth(newWidth);
+  const { push } = useRouter();
+  const redirectToProfile = () => {
+    push(`/profile`);
   };
-
   return (
-    <div className=' h-full w-full flex'>
-      {store.view === 'both' ? (
-        <>
-          <DocumentSection docId={params.canvasId} />
-          <Border changeCanvasSectionWidth={changeCanvasSectionWidth} />
-          <CanvasSection canvasId={params.canvasId} width={canvasSectionWidth} />
-        </>
-      ) : null}
-      {store.view === 'canvas' ? (
-        <CanvasSection canvasId={params.canvasId} width={canvasSectionWidth} fullView />
-      ) : null}
-      {store.view === 'document' ? <DocumentSection docId={params.canvasId} /> : null}
+    <div className='h-full w-full flex justify-center items-center flex-col'>
+      <TypographyH2 text='Hey There, Welcome to Idea Drawer' />
+      <div className='mt-4'>
+        <NewCanvasDialog />
+        <Button className='ml-3' onClick={() => redirectToProfile()}>
+          Existing Projects
+        </Button>
+      </div>
     </div>
   );
 }

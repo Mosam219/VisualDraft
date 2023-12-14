@@ -15,5 +15,6 @@ export default defineSchema({
     ),
     docContent: v.string(),
     userId: v.string(),
+    name: v.string(),
   }),
 });

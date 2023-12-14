@@ -22,7 +22,7 @@ const ToolBar: React.FC = () => {
 
   const { data: session } = useSession();
 
-  const saveCanvas = useMutation(api.tasks.saveCanvas);
+  const createCanvas = useMutation(api.tasks.createCanvas);
 
   const changeMode = useCallback(
     (mode: string) => {
@@ -34,23 +34,7 @@ const ToolBar: React.FC = () => {
     [setStore],
   );
   const handleSaveCanvas = async () => {
-    if (!session) return;
-    const canvasElms = elements.map(
-      (item): CanvasElementsType => ({
-        mode: item.mode,
-        x1: item.x1,
-        x2: item.x2,
-        y2: item.y2,
-        y1: item.y1,
-        id: item.id,
-      }),
-    );
-    const id = await saveCanvas({
-      elements: canvasElms,
-      userId: session.user.id,
-      docContent: '',
-    });
-    router.push(`/canvas/${id}`);
+    // router.push(`/canvas/${id}`);
   };
   const menus = useMemo(
     () => [

@@ -9,6 +9,7 @@ import { type ThemeProviderProps } from 'next-themes/dist/types';
 import NextAuthProvider from './components/NextAuthProvider';
 import JotaiProvider from './components/JotaiProvider';
 import ConvexClientProvider from '@/app/components/ConvexClientProvider';
+import { Toaster } from '@/components/ui/toaster';
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
@@ -28,6 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang='en'>
       <body className={cn('h-screen font-sans antialiased', inter.variable)}>
+        <Toaster />
         <NextAuthProvider>
           <JotaiProvider>
             <ThemeProvider

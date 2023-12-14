@@ -46,8 +46,9 @@ const DocumentSection: React.FC<{ docId: string }> = ({ docId }) => {
     await updateDoc({ content: content, docId: docId as Id<'canvas'> });
   };
   const delayedSave = debounce(async (content: string) => {
+    console.log('updating');
     await saveToDb(content);
-  }, 3000);
+  }, 2000);
 
   const changeHandler = () => {
     if (!quill) return;

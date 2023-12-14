@@ -42,7 +42,6 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
 
   const [store, setStore] = useAtom(globalState);
   const updateCanvas = useMutation(api.tasks.updateCanvas);
-  const saveCanvas = useMutation(api.tasks.saveCanvas);
 
   const storedCanvas = useQuery(api.tasks.getDoc, { id: canvasId as Id<'canvas'> });
 
@@ -91,8 +90,9 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
   };
 
   const delayedSave = debounce(async (elements: ElementType[]) => {
+    console.log('updating');
     await handleUpdateCanvas(elements);
-  }, 3000);
+  }, 2000);
 
   const createNewElement = useCallback(
     (
@@ -405,8 +405,11 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
     elements.map(({ roughElement }) => {
       roughCanvas?.current?.draw(roughElement);
     });
+    console.log('calling');
     delayedSave(elements);
-  }, [elements, roughCanvas, canvasRef, width]);
+
+    return delayedSave.cancel;
+  }, [elements, roughCanvas, canvasRef, width, delayedSave]);
 
   return {
     handleMouseDown,
