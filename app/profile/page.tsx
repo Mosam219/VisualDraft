@@ -29,7 +29,7 @@ const Profile = () => {
     push(`/canvas/${id}`);
   };
   return (
-    <div className='w-full h-full bg-white text-black'>
+    <div className='w-full h-full'>
       <div className='w-full flex flex-col items-center pt-7'>
         <motion.div
           initial={{ opacity: 0, scale: 0.5 }}
@@ -45,7 +45,7 @@ const Profile = () => {
           <TypographyP text={user?.email || ''} />
         </div>
       </div>
-      <hr className='w-[95%] h-1 mx-auto my-2 bg-gray-100 border-0 rounded md:my-8 dark:bg-gray-300 md:w-[85%]' />
+      <hr className='w-[95%] h-1 mx-auto my-2  border-0 rounded md:my-8 dark:bg-muted-foreground bg-muted md:w-[85%]' />
       <div className='flex justify-center font-bold text-2xl'>Your Projects</div>
       <div className='w-[95%] mx-auto md:w-[85%] pt-2 max-h-[500px] overflow-scroll'>
         {allCanvases &&
