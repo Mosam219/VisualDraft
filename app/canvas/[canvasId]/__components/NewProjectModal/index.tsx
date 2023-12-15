@@ -16,6 +16,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { api } from '@/convex/_generated/api';
 import { useMutation } from 'convex/react';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 interface SFormState {
@@ -27,6 +28,7 @@ const NewCanvasDialog = () => {
   const createCanvas = useMutation(api.tasks.createCanvas);
   const session = useSession();
   const { toast } = useToast();
+  const { push } = useRouter();
 
   const handleChange = (key: string, value: string) => {
     setFormState((prev) => ({
@@ -38,12 +40,13 @@ const NewCanvasDialog = () => {
     const userId = session.data?.user.id;
     if (!userId) return;
     try {
-      const data = await createCanvas({
+      const id = await createCanvas({
         docContent: '',
         elements: [],
         name: formState.name,
         userId: userId,
       });
+      push(`/canvas/${id}`);
       toast({ title: 'New Canvas Created' });
     } catch (e) {
       console.log(e);

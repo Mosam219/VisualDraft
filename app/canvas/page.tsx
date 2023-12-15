@@ -1,6 +1,6 @@
 'use client';
 import { Button } from '@/components/ui/button';
-import NewCanvasDialog from './[canvasId]/__components/NewCanvasModal';
+import NewCanvasDialog from './[canvasId]/__components/NewProjectModal';
 import { useRouter } from 'next/navigation';
 import { TypographyH1, TypographyH2 } from '@/components/ui/Typography';
 
