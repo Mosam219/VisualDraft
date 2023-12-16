@@ -16,9 +16,9 @@ import { Id } from '@/convex/_generated/dataModel';
 type SelectionType = 'document' | 'both' | 'canvas';
 
 const Header: React.FC = () => {
-  const { canvasId } = useParams();
+  const { projectId } = useParams();
   const [store, setStore] = useAtom(globalState);
-  const canvas = useQuery(api.tasks.getDoc, { id: canvasId as Id<'canvas'> });
+  const canvas = useQuery(api.tasks.getDoc, { id: projectId as Id<'canvas'> });
   const { view } = store;
 
   const handleChangeView = (newView: SelectionType) => {
@@ -31,7 +31,7 @@ const Header: React.FC = () => {
   return (
     <div className='h-[5%] bg-background border-b-2 flex justify-between px-5 items-center'>
       <TypographyH4 text={canvas?.name || 'New Project'} />
-      {canvasId ? (
+      {projectId ? (
         <div>
           <Button
             className={`w-24 rounded-l-lg ${
