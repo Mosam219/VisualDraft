@@ -17,7 +17,7 @@ interface Props {
 }
 const UserProfile = ({ user }: Props) => {
   return (
-    <div className='w-full h-48 flex flex-col items-center pt-7'>
+    <div className='w-full h-56 md:h-48 flex flex-col items-center pt-7'>
       <motion.div
         initial={{ opacity: 0, scale: 0.5 }}
         animate={{ opacity: 1, scale: 1 }}
