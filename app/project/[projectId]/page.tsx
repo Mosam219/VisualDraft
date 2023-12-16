@@ -8,10 +8,10 @@ import { globalState } from '@/stores/globalStore';
 import { Id } from '@/convex/_generated/dataModel';
 
 function CanvasPage({
-  params: { canvasId },
+  params: { projectId },
 }: {
   params: {
-    canvasId: Id<'canvas'>;
+    projectId: Id<'canvas'>;
   };
 }) {
   const [store] = useAtom(globalState);
@@ -25,15 +25,15 @@ function CanvasPage({
     <div className=' h-full w-full flex'>
       {store.view === 'both' ? (
         <>
-          <DocumentSection docId={canvasId} />
+          <DocumentSection docId={projectId} />
           <Border changeCanvasSectionWidth={changeCanvasSectionWidth} />
-          <CanvasSection canvasId={canvasId} width={canvasSectionWidth} />
+          <CanvasSection canvasId={projectId} width={canvasSectionWidth} />
         </>
       ) : null}
       {store.view === 'canvas' ? (
-        <CanvasSection canvasId={canvasId} width={canvasSectionWidth} fullView />
+        <CanvasSection canvasId={projectId} width={canvasSectionWidth} fullView />
       ) : null}
-      {store.view === 'document' ? <DocumentSection docId={canvasId} /> : null}
+      {store.view === 'document' ? <DocumentSection docId={projectId} /> : null}
     </div>
   );
 }

@@ -4,7 +4,7 @@ const nextConfig = {
     return [
       {
         source: '/',
-        destination: '/canvas',
+        destination: '/project',
         permanent: true,
       },
     ];

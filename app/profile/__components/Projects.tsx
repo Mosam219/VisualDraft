@@ -16,7 +16,7 @@ interface Props {
 const Projects = ({ allCanvases }: Props) => {
   const { push } = useRouter();
   const redirectToCanvas = (id: string) => {
-    push(`/canvas/${id}`);
+    push(`/project/${id}`);
   };
   return (
     <div className='w-[95%] min-h-[30%] mx-auto md:w-[85%] pt-2 max-h-[500px] bg-secondary dark:bg-secondary overflow-scroll'>

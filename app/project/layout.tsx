@@ -1,4 +1,4 @@
-import Header from './[canvasId]/__components/Header';
+import Header from './[projectId]/__components/Header';
 
 export default function CanvasLayout({ children }: { children: React.ReactNode }) {
   return (

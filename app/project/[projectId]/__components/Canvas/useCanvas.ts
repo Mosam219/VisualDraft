@@ -8,7 +8,7 @@ import { ROUGHNESS } from '../../constants';
 import { useTheme } from 'next-themes';
 import { useAtom } from 'jotai';
 import { globalState } from '@/stores/globalStore';
-import { MODES } from '@/app/canvas/[canvasId]/__components/ToolBar/constants';
+import { MODES } from '@/app/project/[projectId]/__components/ToolBar/constants';
 import { ElementType } from '@/stores/types';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';

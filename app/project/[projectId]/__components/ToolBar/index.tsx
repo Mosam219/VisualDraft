@@ -1,14 +1,11 @@
 import React, { useCallback, useMemo } from 'react';
-import { BoxSelect, Download, Minus, Square } from 'lucide-react';
-import { MODES } from '@/app/canvas/[canvasId]/__components/ToolBar/constants';
+import { BoxSelect, Minus, Square } from 'lucide-react';
+import { MODES } from '@/app/project/[projectId]/__components/ToolBar/constants';
 import { ToolTipComponent } from '@/components/ui/tooltip';
 import { globalState } from '@/stores/globalStore';
 import { useAtom } from 'jotai';
-import { CanvasElementsType } from '@/convex/tasks';
 import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
 
 const ToolBar: React.FC = () => {
   const [
@@ -17,10 +14,6 @@ const ToolBar: React.FC = () => {
     },
     setStore,
   ] = useAtom(globalState);
-
-  const router = useRouter();
-
-  const { data: session } = useSession();
 
   const createCanvas = useMutation(api.tasks.createCanvas);
 
@@ -33,9 +26,6 @@ const ToolBar: React.FC = () => {
     },
     [setStore],
   );
-  const handleSaveCanvas = async () => {
-    // router.push(`/canvas/${id}`);
-  };
   const menus = useMemo(
     () => [
       {
@@ -52,11 +42,6 @@ const ToolBar: React.FC = () => {
         component: <BoxSelect />,
         toolTip: 'selection',
         handler: () => changeMode(MODES.selection),
-      },
-      {
-        component: <Download />,
-        toolTip: 'save',
-        handler: () => handleSaveCanvas(),
       },
     ],
     [changeMode, elements],

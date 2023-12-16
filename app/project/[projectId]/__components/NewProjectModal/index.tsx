@@ -46,7 +46,7 @@ const NewCanvasDialog = () => {
         name: formState.name,
         userId: userId,
       });
-      push(`/canvas/${id}`);
+      push(`/project/${id}`);
       toast({ title: 'New Canvas Created' });
     } catch (e) {
       console.log(e);
