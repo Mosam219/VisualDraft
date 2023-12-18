@@ -1,5 +1,5 @@
 'use client';
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import styles from './canvas.module.css';
 import useCanvas from './useCanvas';
 import ToolBar from '@/app/project/[projectId]/__components/ToolBar';
