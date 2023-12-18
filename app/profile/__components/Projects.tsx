@@ -2,7 +2,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import CanvasTile from './CanvasTile';
 import { useRouter } from 'next/navigation';
 import { Id } from '@/convex/_generated/dataModel';
-import { TypographyH1, TypographyH4 } from '@/components/ui/Typography';
+import { TypographyH4 } from '@/components/ui/Typography';
 import NewCanvasDialog from '@/app/project/[projectId]/__components/NewProjectModal';
 
 interface Props {
