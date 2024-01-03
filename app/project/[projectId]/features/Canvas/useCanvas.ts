@@ -17,6 +17,8 @@ import { useSession } from 'next-auth/react';
 import { CanvasElementsType } from '@/convex/tasks';
 import { useRouter } from 'next/navigation';
 import { debounce } from 'lodash';
+import useHistory from '@/app/hooks/useHistory';
+import useKeyShortCut from '@/app/hooks/useKeyShortCut';
 
 interface Props {
   width: number;
@@ -36,8 +38,6 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
   const [firstLoad, setFirstLoad] = useState<boolean>(true);
   const roughCanvas = useRef<RoughCanvas>();
 
-  const router = useRouter();
-
   const { data: session } = useSession();
 
   const [store, setStore] = useAtom(globalState);
@@ -45,26 +45,21 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
 
   const storedCanvas = useQuery(api.tasks.getDoc, { id: canvasId as Id<'canvas'> });
 
-  const {
-    mode,
-    canvas: { elements },
-  } = store;
+  const { mode } = store;
 
   const generator = rough.generator();
   const { theme } = useTheme();
-
-  const handleSetElements = useCallback(
-    (elements: Array<ElementType>) => {
-      setStore((prev) => ({
-        ...prev,
-        canvas: {
-          ...prev.canvas,
-          elements: elements,
-        },
-      }));
+  const { elements, setElements, undo, redo } = useHistory();
+  useKeyShortCut([
+    {
+      key: 'ctrl+shift+z',
+      handler: () => redo(),
     },
-    [setStore],
-  );
+    {
+      key: 'ctrl+z',
+      handler: () => undo(),
+    },
+  ]);
 
   const handleUpdateCanvas = async (elements: ElementType[]) => {
     if (!session) return;
@@ -180,11 +175,12 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
           clientY - canvas.getBoundingClientRect().top,
           mode,
         );
-        if (element) handleSetElements([...elements, element]);
+        if (element) setElements([...elements, element], true);
       }
     },
-    [canvasRef, createNewElement, elements, getElementsAtPosition, mode, handleSetElements],
+    [canvasRef, createNewElement, elements, getElementsAtPosition, mode, setElements],
   );
+  console.log(elements);
 
   const adjustElementCoordinates = (element: ElementType) => {
     const { mode, x1, y1, x2, y2 } = element;
@@ -221,9 +217,9 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
     (id: number, updatedElement: ElementType) => {
       const elementsCopy = [...elements];
       elementsCopy[id] = updatedElement;
-      handleSetElements(elementsCopy);
+      setElements(elementsCopy);
     },
-    [elements, handleSetElements],
+    [elements, setElements],
   );
 
   const getElementAtPosition = (x: number, y: number, elements: ElementType[]) => {
@@ -353,7 +349,7 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
   useEffect(() => {
     if (!storedCanvas || !firstLoad) return;
     setFirstLoad(false);
-    handleSetElements(
+    setElements(
       storedCanvas?.elements?.map(
         (item) =>
           createNewElement(
@@ -393,7 +389,7 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
       (item): ElementType =>
         createNewElement(item.id, item.x1, item.y1, item.x2, item.y2, item.mode)!!,
     );
-    handleSetElements(elm);
+    setElements(elm);
   }, [theme]);
 
   useEffect(() => {
@@ -405,7 +401,6 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
     elements.map(({ roughElement }) => {
       roughCanvas?.current?.draw(roughElement);
     });
-    console.log('calling');
     delayedSave(elements);
 
     return delayedSave.cancel;
@@ -415,6 +410,8 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
     handleMouseDown,
     handleMouseMove,
     handleMouseUp,
+    undo,
+    redo,
   };
 };
 

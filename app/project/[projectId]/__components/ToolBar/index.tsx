@@ -4,18 +4,20 @@ import { MODES } from '@/app/project/[projectId]/__components/ToolBar/constants'
 import { ToolTipComponent } from '@/components/ui/tooltip';
 import { globalState } from '@/stores/globalStore';
 import { useAtom } from 'jotai';
-import { useMutation } from 'convex/react';
-import { api } from '@/convex/_generated/api';
+import BottomBar from './BottomBar';
 
-const ToolBar: React.FC = () => {
+interface Props {
+  undo: () => void;
+  redo: () => void;
+}
+
+const ToolBar: React.FC<Props> = ({ undo, redo }) => {
   const [
     {
       canvas: { elements },
     },
     setStore,
   ] = useAtom(globalState);
-
-  const createCanvas = useMutation(api.tasks.createCanvas);
 
   const changeMode = useCallback(
     (mode: string) => {
@@ -47,19 +49,22 @@ const ToolBar: React.FC = () => {
     [changeMode, elements],
   );
   return (
-    <div
-      className={
-        'absolute top-10 left-3 border-1 flex flex-col justify-center items-center w-10 divide-y-2 divide-primary-foreground shadow-md'
-      }
-    >
-      {menus.map((menu, index) => (
-        <div key={index} className={'p-2 cursor-pointer'} onClick={menu.handler}>
-          <ToolTipComponent text={menu.toolTip} position={'right'}>
-            {menu.component}
-          </ToolTipComponent>
-        </div>
-      ))}
-    </div>
+    <>
+      <div
+        className={
+          'absolute top-10 left-3 border-1 flex flex-col justify-center items-center w-10 divide-y-2 divide-primary-foreground shadow-md'
+        }
+      >
+        {menus.map((menu, index) => (
+          <div key={index} className={'p-2 cursor-pointer'} onClick={menu.handler}>
+            <ToolTipComponent text={menu.toolTip} position={'right'}>
+              {menu.component}
+            </ToolTipComponent>
+          </div>
+        ))}
+      </div>
+      <BottomBar undo={undo} redo={redo} />
+    </>
   );
 };
 export default ToolBar;
