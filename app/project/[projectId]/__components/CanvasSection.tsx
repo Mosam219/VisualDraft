@@ -1,4 +1,4 @@
-import Canvas from './Canvas';
+import Canvas from '../features/Canvas';
 interface Props {
   width: number;
   fullView?: boolean;
