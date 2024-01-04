@@ -10,12 +10,12 @@ const BottomBar: React.FC<Props> = ({ undo, redo }) => {
   const menus = [
     {
       component: <Undo2 />,
-      toolTip: 'Undo',
+      toolTip: 'Undo [ctrl+z]',
       onClick: undo,
     },
     {
       component: <Redo2 />,
-      toolTip: 'Redo',
+      toolTip: 'Redo [ctrl+shift+z]',
       onClick: redo,
     },
   ];

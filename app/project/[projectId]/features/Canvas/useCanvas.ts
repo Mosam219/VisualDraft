@@ -35,7 +35,6 @@ interface SelectedElmType extends ElementType {
 const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
   const [selectedElm, setSelectedElm] = useState<SelectedElmType | null>(null);
-  const [firstLoad, setFirstLoad] = useState<boolean>(true);
   const roughCanvas = useRef<RoughCanvas>();
 
   const { data: session } = useSession();
@@ -49,45 +48,6 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
 
   const generator = rough.generator();
   const { theme } = useTheme();
-  const { elements, setElements, undo, redo } = useHistory();
-  useKeyShortCut([
-    {
-      key: 'ctrl+shift+z',
-      handler: () => redo(),
-    },
-    {
-      key: 'ctrl+z',
-      handler: () => undo(),
-    },
-  ]);
-
-  const handleUpdateCanvas = async (elements: ElementType[]) => {
-    if (!session) return;
-    console.log('updating');
-    const canvasElms = elements.map(
-      (item): CanvasElementsType => ({
-        mode: item.mode,
-        x1: item.x1,
-        x2: item.x2,
-        y2: item.y2,
-        y1: item.y1,
-        id: item.id,
-      }),
-    );
-    try {
-      await updateCanvas({
-        elements: canvasElms,
-        docId: canvasId as Id<'canvas'>,
-      });
-    } catch (e) {
-      console.log(e);
-    }
-  };
-
-  const delayedSave = debounce(async (elements: ElementType[]) => {
-    console.log('updating');
-    await handleUpdateCanvas(elements);
-  }, 2000);
 
   const createNewElement = useCallback(
     (
@@ -126,6 +86,58 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
     },
     [generator, theme],
   );
+
+  const { elements, setElements, undo, redo } = useHistory({
+    defaultElements:
+      storedCanvas?.elements?.map(
+        (item) =>
+          createNewElement(
+            item.id,
+            item.x1,
+            item.y1,
+            item.x2,
+            item.y2,
+            item.mode as keyof typeof MODES,
+          )!!,
+      ) || [],
+  });
+  useKeyShortCut([
+    {
+      key: 'ctrl+shift+z',
+      handler: () => redo(),
+    },
+    {
+      key: 'ctrl+z',
+      handler: () => undo(),
+    },
+  ]);
+
+  const handleUpdateCanvas = async (elements: ElementType[]) => {
+    if (!session) return;
+    console.log('updating');
+    const canvasElms = elements.map(
+      (item): CanvasElementsType => ({
+        mode: item.mode,
+        x1: item.x1,
+        x2: item.x2,
+        y2: item.y2,
+        y1: item.y1,
+        id: item.id,
+      }),
+    );
+    try {
+      await updateCanvas({
+        elements: canvasElms,
+        docId: canvasId as Id<'canvas'>,
+      });
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  const delayedSave = debounce(async (elements: ElementType[]) => {
+    await handleUpdateCanvas(elements);
+  }, 1000);
 
   const isWithinElement = (element: ElementType, x: number, y: number) => {
     const getDistance = (x1: number, y1: number, x2: number, y2: number) =>
@@ -346,24 +358,6 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
     [canvasRef, elements, isDrawing, createNewElement, mode, selectedElm, updateElement],
   );
 
-  useEffect(() => {
-    if (!storedCanvas || !firstLoad) return;
-    setFirstLoad(false);
-    setElements(
-      storedCanvas?.elements?.map(
-        (item) =>
-          createNewElement(
-            item.id,
-            item.x1,
-            item.y1,
-            item.x2,
-            item.y2,
-            item.mode as keyof typeof MODES,
-          )!!,
-      ) || [],
-    );
-  }, [storedCanvas]);
-
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -402,8 +396,7 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
       roughCanvas?.current?.draw(roughElement);
     });
     delayedSave(elements);
-
-    return delayedSave.cancel;
+    return () => delayedSave.cancel();
   }, [elements, roughCanvas, canvasRef, width, delayedSave]);
 
   return {

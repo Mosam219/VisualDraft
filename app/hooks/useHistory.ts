@@ -3,11 +3,10 @@ import { ElementType } from '@/stores/types';
 import { useAtom } from 'jotai';
 import { useState } from 'react';
 
-const useHistory = () => {
+const useHistory = ({ defaultElements }: { defaultElements: ElementType[] }) => {
   const [index, setIndex] = useState<number>(0);
-  const [history, setHistory] = useState<Array<ElementType[]>>([[]]);
+  const [history, setHistory] = useState<Array<ElementType[]>>([defaultElements]);
   const [store, setStore] = useAtom(globalState);
-  console.log('history', history);
   const setElements = (newState: ElementType[], isNew: boolean = false) => {
     if (isNew) {
       if (index === history.length - 1) setHistory((prev) => [...prev, newState]);

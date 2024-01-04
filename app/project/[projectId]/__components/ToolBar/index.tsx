@@ -12,12 +12,7 @@ interface Props {
 }
 
 const ToolBar: React.FC<Props> = ({ undo, redo }) => {
-  const [
-    {
-      canvas: { elements },
-    },
-    setStore,
-  ] = useAtom(globalState);
+  const [{ mode }, setStore] = useAtom(globalState);
 
   const changeMode = useCallback(
     (mode: string) => {
@@ -28,26 +23,26 @@ const ToolBar: React.FC<Props> = ({ undo, redo }) => {
     },
     [setStore],
   );
-  const menus = useMemo(
-    () => [
-      {
-        component: <Minus />,
-        toolTip: 'Line',
-        handler: () => changeMode(MODES.line),
-      },
-      {
-        component: <Square />,
-        toolTip: 'Rectangle',
-        handler: () => changeMode(MODES.rectangle),
-      },
-      {
-        component: <BoxSelect />,
-        toolTip: 'selection',
-        handler: () => changeMode(MODES.selection),
-      },
-    ],
-    [changeMode, elements],
-  );
+  const menus = [
+    {
+      component: <Minus />,
+      toolTip: 'Line',
+      handler: () => changeMode(MODES.line),
+      isSelected: MODES.line === mode,
+    },
+    {
+      component: <Square />,
+      toolTip: 'Rectangle',
+      handler: () => changeMode(MODES.rectangle),
+      isSelected: MODES.rectangle === mode,
+    },
+    {
+      component: <BoxSelect />,
+      toolTip: 'selection',
+      handler: () => changeMode(MODES.selection),
+      isSelected: MODES.selection === mode,
+    },
+  ];
   return (
     <>
       <div
@@ -56,7 +51,11 @@ const ToolBar: React.FC<Props> = ({ undo, redo }) => {
         }
       >
         {menus.map((menu, index) => (
-          <div key={index} className={'p-2 cursor-pointer'} onClick={menu.handler}>
+          <div
+            key={index}
+            className={`p-2 cursor-pointer ${menu.isSelected && 'bg-secondary'}`}
+            onClick={menu.handler}
+          >
             <ToolTipComponent text={menu.toolTip} position={'right'}>
               {menu.component}
             </ToolTipComponent>
