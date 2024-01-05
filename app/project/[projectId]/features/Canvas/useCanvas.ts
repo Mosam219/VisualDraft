@@ -15,8 +15,9 @@ import { Id } from '@/convex/_generated/dataModel';
 import { useMutation, useQuery } from 'convex/react';
 import { useSession } from 'next-auth/react';
 import { CanvasElementsType } from '@/convex/tasks';
-import { useRouter } from 'next/navigation';
 import { debounce } from 'lodash';
+import useHistory from '@/app/hooks/useHistory';
+import useKeyShortCut from '@/app/hooks/useKeyShortCut';
 
 interface Props {
   width: number;
@@ -35,8 +36,18 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
   const [selectedElm, setSelectedElm] = useState<SelectedElmType | null>(null);
   const [firstLoad, setFirstLoad] = useState<boolean>(true);
   const roughCanvas = useRef<RoughCanvas>();
+  const { updateHistory, undo, redo } = useHistory();
 
-  const router = useRouter();
+  useKeyShortCut([
+    {
+      handler: () => handleRedo(),
+      key: 'ctrl+shift+z',
+    },
+    {
+      handler: () => handleUndo(),
+      key: 'ctrl+z',
+    },
+  ]);
 
   const { data: session } = useSession();
 
@@ -180,7 +191,10 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
           clientY - canvas.getBoundingClientRect().top,
           mode,
         );
-        if (element) handleSetElements([...elements, element]);
+        if (element) {
+          handleSetElements([...elements, element]);
+          updateHistory([...elements, element], true);
+        }
       }
     },
     [canvasRef, createNewElement, elements, getElementsAtPosition, mode, handleSetElements],
@@ -222,6 +236,7 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
       const elementsCopy = [...elements];
       elementsCopy[id] = updatedElement;
       handleSetElements(elementsCopy);
+      updateHistory(elementsCopy);
     },
     [elements, handleSetElements],
   );
@@ -350,6 +365,15 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
     [canvasRef, elements, isDrawing, createNewElement, mode, selectedElm, updateElement],
   );
 
+  const handleUndo = () => {
+    const elements = undo();
+    handleSetElements(elements);
+  };
+  const handleRedo = () => {
+    const elements = redo();
+    handleSetElements(elements);
+  };
+
   useEffect(() => {
     if (!storedCanvas || !firstLoad) return;
     setFirstLoad(false);
@@ -365,6 +389,20 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
             item.mode as keyof typeof MODES,
           )!!,
       ) || [],
+    );
+    updateHistory(
+      storedCanvas?.elements?.map(
+        (item) =>
+          createNewElement(
+            item.id,
+            item.x1,
+            item.y1,
+            item.x2,
+            item.y2,
+            item.mode as keyof typeof MODES,
+          )!!,
+      ) || [],
+      true,
     );
   }, [storedCanvas]);
 
@@ -415,6 +453,8 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
     handleMouseDown,
     handleMouseMove,
     handleMouseUp,
+    undo: handleUndo,
+    redo: handleRedo,
   };
 };
 

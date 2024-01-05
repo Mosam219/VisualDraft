@@ -6,11 +6,18 @@ import { globalState } from '@/stores/globalStore';
 import { useAtom } from 'jotai';
 import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
+import BottomBar from './BottomBar';
 
-const ToolBar: React.FC = () => {
+interface Props {
+  undo: () => void;
+  redo: () => void;
+}
+
+const ToolBar: React.FC<Props> = ({ undo, redo }) => {
   const [
     {
       canvas: { elements },
+      mode,
     },
     setStore,
   ] = useAtom(globalState);
@@ -26,40 +33,47 @@ const ToolBar: React.FC = () => {
     },
     [setStore],
   );
-  const menus = useMemo(
-    () => [
-      {
-        component: <Minus />,
-        toolTip: 'Line',
-        handler: () => changeMode(MODES.line),
-      },
-      {
-        component: <Square />,
-        toolTip: 'Rectangle',
-        handler: () => changeMode(MODES.rectangle),
-      },
-      {
-        component: <BoxSelect />,
-        toolTip: 'selection',
-        handler: () => changeMode(MODES.selection),
-      },
-    ],
-    [changeMode, elements],
-  );
+  const menus = [
+    {
+      component: <Minus />,
+      toolTip: 'Line',
+      handler: () => changeMode(MODES.line),
+      isSelected: mode === MODES.line,
+    },
+    {
+      component: <Square />,
+      toolTip: 'Rectangle',
+      handler: () => changeMode(MODES.rectangle),
+      isSelected: mode === MODES.rectangle,
+    },
+    {
+      component: <BoxSelect />,
+      toolTip: 'selection',
+      handler: () => changeMode(MODES.selection),
+      isSelected: mode === MODES.selection,
+    },
+  ];
   return (
-    <div
-      className={
-        'absolute top-10 left-3 border-1 flex flex-col justify-center items-center w-10 divide-y-2 divide-primary-foreground shadow-md'
-      }
-    >
-      {menus.map((menu, index) => (
-        <div key={index} className={'p-2 cursor-pointer'} onClick={menu.handler}>
-          <ToolTipComponent text={menu.toolTip} position={'right'}>
-            {menu.component}
-          </ToolTipComponent>
-        </div>
-      ))}
-    </div>
+    <>
+      <div
+        className={
+          'absolute top-10 left-3 border-1 flex flex-col justify-center items-center w-10 divide-y-2 divide-primary-foreground shadow-md'
+        }
+      >
+        {menus.map((menu, index) => (
+          <div
+            key={index}
+            className={`p-2 cursor-pointer ${menu.isSelected && 'bg-secondary'}`}
+            onClick={menu.handler}
+          >
+            <ToolTipComponent text={menu.toolTip} position={'right'}>
+              {menu.component}
+            </ToolTipComponent>
+          </div>
+        ))}
+      </div>
+      <BottomBar undo={undo} redo={redo} />
+    </>
   );
 };
 export default ToolBar;

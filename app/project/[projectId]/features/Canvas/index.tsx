@@ -11,7 +11,7 @@ interface Props {
 
 const Canvas: React.FC<Props> = ({ width, canvasId }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const { handleMouseMove, handleMouseUp, handleMouseDown } = useCanvas({
+  const { handleMouseMove, handleMouseUp, handleMouseDown, undo, redo } = useCanvas({
     canvasRef: canvasRef,
     width: width,
     canvasId: canvasId,
@@ -19,7 +19,7 @@ const Canvas: React.FC<Props> = ({ width, canvasId }) => {
 
   return (
     <>
-      <ToolBar />
+      <ToolBar undo={undo} redo={redo} />
       <canvas
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}

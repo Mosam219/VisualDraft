@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import Border from './__components/Border';
 import CanvasSection from './__components/CanvasSection';
-import DocumentSection from './__components/DocumentSection';
+import DocumentSection from './features/DocumentSection';
 import { useAtom } from 'jotai';
 import { globalState } from '@/stores/globalStore';
 import { Id } from '@/convex/_generated/dataModel';

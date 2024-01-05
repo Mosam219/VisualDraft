@@ -1,1 +1,1 @@
-export const ROUGHNESS = 1;
+export const ROUGHNESS = 0;
