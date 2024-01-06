@@ -18,6 +18,7 @@ import { CanvasElementsType } from '@/convex/tasks';
 import { debounce } from 'lodash';
 import useHistory from '@/app/hooks/useHistory';
 import useKeyShortCut from '@/app/hooks/useKeyShortCut';
+import { CanvasUtils } from './utils';
 
 interface Props {
   width: number;
@@ -79,7 +80,6 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
 
   const handleUpdateCanvas = async (elements: ElementType[]) => {
     if (!session) return;
-    console.log('updating');
     const canvasElms = elements.map(
       (item): CanvasElementsType => ({
         mode: item.mode,
@@ -143,29 +143,6 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
     [generator, theme],
   );
 
-  const isWithinElement = (element: ElementType, x: number, y: number) => {
-    const getDistance = (x1: number, y1: number, x2: number, y2: number) =>
-      Math.sqrt(Math.pow(Math.abs(x1 - x2), 2) - Math.pow(Math.abs(y1 - y2), 2));
-    const mode = element.mode;
-    switch (mode) {
-      case MODES.line:
-        const offset =
-          getDistance(element.x1, element.y1, element.x2, element.y2) -
-          getDistance(element.x1, element.y1, x, y) -
-          getDistance(x, y, element.x2, element.y2);
-        return offset && Math.abs(offset) <= 1;
-      case MODES.rectangle:
-        return element.x1 <= x && element.x2 >= x && element.y1 <= y && element.y2 >= y;
-    }
-  };
-
-  const getElementsAtPosition = useCallback(
-    (x: number, y: number, elements: Array<ElementType>) => {
-      return elements.find((element) => isWithinElement(element, x, y));
-    },
-    [],
-  );
-
   const handleMouseDown = useCallback(
     (event: React.MouseEvent<HTMLCanvasElement>) => {
       setIsDrawing(true);
@@ -176,8 +153,8 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
       const y = clientY - canvas.getBoundingClientRect().top;
 
       if (mode === MODES.selection) {
-        const elm = getElementsAtPosition(x, y, elements);
-        const nearByElm = findElementNearBy(x, y, elements);
+        const elm = CanvasUtils.getElementsAtPosition(x, y, elements);
+        const nearByElm = CanvasUtils.findElementNearBy(x, y, elements);
         if (nearByElm)
           setSelectedElm({ ...nearByElm.elm, offsetX: 0, offsetY: 0, position: nearByElm.angle });
         else if (elm)
@@ -197,32 +174,15 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
         }
       }
     },
-    [canvasRef, createNewElement, elements, getElementsAtPosition, mode, handleSetElements],
+    [canvasRef, createNewElement, elements, mode, handleSetElements],
   );
-
-  const adjustElementCoordinates = (element: ElementType) => {
-    const { mode, x1, y1, x2, y2 } = element;
-    if (mode === 'rectangle') {
-      const minX = Math.min(x1, x2);
-      const maxX = Math.max(x1, x2);
-      const minY = Math.min(y1, y2);
-      const maxY = Math.max(y1, y2);
-      return { x1: minX, y1: minY, x2: maxX, y2: maxY };
-    } else {
-      if (x1 < x2 || (x1 === x2 && y1 < y2)) {
-        return { x1, y1, x2, y2 };
-      } else {
-        return { x1: x2, y1: y2, x2: x1, y2: y1 };
-      }
-    }
-  };
 
   const handleMouseUp = () => {
     if (selectedElm) {
       const { id, position } = selectedElm;
       const { mode } = elements[id];
       if (position) {
-        const { x1, y1, x2, y2 } = adjustElementCoordinates(elements[id]);
+        const { x1, y1, x2, y2 } = CanvasUtils.adjustElementCoordinates(elements[id]);
         const updatedElm = createNewElement(id, x1, y1, x2, y2, mode);
         if (updatedElm) updateElement(id, updatedElm);
       }
@@ -241,64 +201,6 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
     [elements, handleSetElements],
   );
 
-  const getElementAtPosition = (x: number, y: number, elements: ElementType[]) => {
-    return elements.find((element) => isWithinElement(element, x, y));
-  };
-
-  const cursorForPosition = (position: string) => {
-    switch (position) {
-      case 'tl':
-      case 'br':
-      case 'start':
-      case 'end':
-        return 'nwse-resize';
-      case 'tr':
-      case 'bl':
-        return 'nesw-resize';
-      default:
-        return 'move';
-    }
-  };
-
-  const isElementNearBy = (x: number, y: number, element: ElementType) => {
-    const nearPoint = (x: number, y: number, x1: number, y1: number, name: string) =>
-      Math.abs(x - x1) < 5 && Math.abs(y - y1) < 5 ? name : null;
-    const { x1, x2, y1, y2 } = element;
-    const topLeft = nearPoint(x, y, x1, y1, 'tl');
-    const topRight = nearPoint(x, y, x2, y1, 'tr');
-    const bottomLeft = nearPoint(x, y, x1, y2, 'bl');
-    const bottomRight = nearPoint(x, y, x2, y2, 'br');
-    return topLeft || topRight || bottomLeft || bottomRight || null;
-  };
-
-  const findElementNearBy = (x: number, y: number, elements: ElementType[]) => {
-    const elem = elements.find((item) => isElementNearBy(x, y, item));
-    return elem ? { elm: elem, angle: isElementNearBy(x, y, elem) } : null;
-  };
-
-  const resizedCoordinates = (
-    x: number,
-    y: number,
-    position: string,
-    coordinates: { x1: number; y1: number; x2: number; y2: number },
-  ) => {
-    const { x1, y1, x2, y2 } = coordinates;
-    switch (position) {
-      case 'tl':
-      case 'start':
-        return { x1: x, y1: y, x2, y2 };
-      case 'tr':
-        return { x1, y1: y, x2: x, y2 };
-      case 'bl':
-        return { x1: x, y1, x2, y2: y };
-      case 'br':
-      case 'end':
-        return { x1, y1, x2: x, y2: y };
-      default:
-        return null; //should not really get here...
-    }
-  };
-
   const handleMouseMove = useCallback(
     (event: React.MouseEvent<HTMLCanvasElement>) => {
       const canvas = canvasRef.current;
@@ -309,10 +211,10 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
       const y = clientY - canvas.getBoundingClientRect().top;
 
       if (mode === MODES.selection) {
-        const element = getElementAtPosition(x, y, elements);
-        const nearByElement = findElementNearBy(x, y, elements);
+        const element = CanvasUtils.getElementAtPosition(x, y, elements);
+        const nearByElement = CanvasUtils.findElementNearBy(x, y, elements);
         event.currentTarget.style.cursor = nearByElement?.angle
-          ? cursorForPosition(nearByElement.angle)
+          ? CanvasUtils.cursorForPosition(nearByElement.angle)
           : element
           ? 'move'
           : 'default';
@@ -324,7 +226,7 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
         const { id, mode, x1, y1, x2, y2, offsetX, offsetY, position } = selectedElm;
         if (position) {
           // nearby
-          const coordinates = resizedCoordinates(x, y, position, { x1, y1, x2, y2 });
+          const coordinates = CanvasUtils.resizedCoordinates(x, y, position, { x1, y1, x2, y2 });
           if (!coordinates) return;
           const updatedElm = createNewElement(
             id,
