@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
-import { BoxSelect, Minus, Square } from 'lucide-react';
+import { CaseSensitive, Minus, MousePointerSquare, Square } from 'lucide-react';
 import { MODES } from '@/app/project/[projectId]/__components/ToolBar/constants';
 import { ToolTipComponent } from '@/components/ui/tooltip';
 import { globalState } from '@/stores/globalStore';
@@ -47,7 +47,13 @@ const ToolBar: React.FC<Props> = ({ undo, redo }) => {
       isSelected: mode === MODES.rectangle,
     },
     {
-      component: <BoxSelect />,
+      component: <CaseSensitive />,
+      toolTip: 'Text',
+      handler: () => changeMode(MODES.text),
+      isSelected: mode === MODES.text,
+    },
+    {
+      component: <MousePointerSquare />,
       toolTip: 'selection',
       handler: () => changeMode(MODES.selection),
       isSelected: mode === MODES.selection,

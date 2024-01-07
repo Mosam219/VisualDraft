@@ -9,6 +9,7 @@ export interface CanvasElementsType {
   x2: number;
   y2: number;
   mode: string;
+  text?: string;
 }
 
 export const createCanvas = mutation({

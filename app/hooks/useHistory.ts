@@ -4,7 +4,6 @@ const useHistory = () => {
   const [index, setIndex] = useState<number>(0);
   const [history, setHistory] = useState<Array<ElementType[]>>([[]]);
   const updateHistory = (elements: ElementType[], isNew: boolean = false) => {
-    console.log(elements, isNew);
     if (isNew) {
       setHistory((prev) => [...prev, elements]);
       setIndex(index + 1);
@@ -21,7 +20,7 @@ const useHistory = () => {
     setIndex(index - 1);
     return pastElm;
   };
-  console.log(history);
+
   const redo = () => {
     if (index === history.length - 1) return history[index];
     const nextElm = history[index + 1];

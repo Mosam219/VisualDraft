@@ -14,6 +14,7 @@ export const CanvasUtils = {
           getDistance(x, y, element.x2, element.y2);
         return offset && Math.abs(offset) <= 1;
       case MODES.rectangle:
+      case MODES.text:
         return element.x1 <= x && element.x2 >= x && element.y1 <= y && element.y2 >= y;
     }
   },

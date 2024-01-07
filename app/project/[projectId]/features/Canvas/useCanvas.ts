@@ -3,7 +3,6 @@
 import { MutableRefObject, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import rough from 'roughjs';
 import { RoughCanvas } from 'roughjs/bin/canvas';
-import { Drawable } from 'roughjs/bin/core';
 import { ROUGHNESS } from '../../constants';
 import { useTheme } from 'next-themes';
 import { useAtom } from 'jotai';
@@ -23,6 +22,7 @@ import { CanvasUtils } from './utils';
 interface Props {
   width: number;
   canvasRef: MutableRefObject<HTMLCanvasElement | null>;
+  textAreaRef: MutableRefObject<HTMLTextAreaElement | null>;
   canvasId: string;
 }
 
@@ -32,7 +32,9 @@ interface SelectedElmType extends ElementType {
   position: string | null; // if it is available then nearby or else inside
 }
 
-const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
+const generator = rough.generator();
+
+const useCanvas = ({ canvasRef, width, canvasId, textAreaRef }: Props) => {
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
   const [selectedElm, setSelectedElm] = useState<SelectedElmType | null>(null);
   const [firstLoad, setFirstLoad] = useState<boolean>(true);
@@ -62,7 +64,6 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
     canvas: { elements },
   } = store;
 
-  const generator = rough.generator();
   const { theme } = useTheme();
 
   const handleSetElements = useCallback(
@@ -88,6 +89,7 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
         y2: item.y2,
         y1: item.y1,
         id: item.id,
+        text: item.text,
       }),
     );
     try {
@@ -101,7 +103,6 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
   };
 
   const delayedSave = debounce(async (elements: ElementType[]) => {
-    console.log('updating');
     await handleUpdateCanvas(elements);
   }, 2000);
 
@@ -113,38 +114,45 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
       x2: number,
       y2: number,
       mode: keyof typeof MODES,
+      text?: string,
     ): ElementType | undefined => {
       if (MODES.selection === mode) {
         return;
       }
-      const getElementBasedOnMode = (mode: keyof typeof MODES) => {
-        switch (mode) {
-          case MODES.line:
-            return generator.line(x1, y1, x2, y2, {
-              roughness: ROUGHNESS,
-              stroke: theme === 'dark' ? 'white' : 'black',
-            });
-            break;
-          case MODES.rectangle:
-            return generator.rectangle(x1, y1, x2 - x1, y2 - y1, {
-              roughness: ROUGHNESS,
-              stroke: theme === 'dark' ? 'white' : 'black',
-            });
-          default:
-            return generator.line(x1, y1, x2, y2, {
-              roughness: ROUGHNESS,
-              stroke: theme === 'dark' ? 'white' : 'black',
-            });
+      switch (mode) {
+        case MODES.line: {
+          const roughElement = generator.line(x1, y1, x2, y2, {
+            roughness: ROUGHNESS,
+            stroke: theme === 'dark' ? 'white' : 'black',
+          });
+          return { id, x1, y1, x2, y2, mode, roughElement };
         }
-      };
-      const roughElement: Drawable = getElementBasedOnMode(mode);
-      return { id, x1, y1, x2, y2, mode, roughElement };
+        case MODES.rectangle: {
+          const roughElement = generator.rectangle(x1, y1, x2 - x1, y2 - y1, {
+            roughness: ROUGHNESS,
+            stroke: theme === 'dark' ? 'white' : 'black',
+          });
+          return { id, x1, y1, x2, y2, mode, roughElement };
+        }
+        case MODES.text: {
+          const width = canvasRef?.current?.getContext('2d')?.measureText(text || '').width;
+          const height = 24;
+          return { id, x1, y1, x2: x1 + (width || 0), y2: y1 + height, mode, text: text || '' };
+        }
+        default:
+          throw `Wrong mode ${mode}`;
+      }
     },
-    [generator, theme],
+    [theme],
   );
 
   const handleMouseDown = useCallback(
     (event: React.MouseEvent<HTMLCanvasElement>) => {
+      console.log(selectedElm);
+      if (selectedElm && mode === MODES.text) {
+        return;
+      }
+
       setIsDrawing(true);
       const canvas = canvasRef.current;
       if (!canvas) return;
@@ -171,6 +179,12 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
         if (element) {
           handleSetElements([...elements, element]);
           updateHistory([...elements, element], true);
+          setSelectedElm({
+            ...element,
+            offsetX: 0,
+            offsetY: 0,
+            position: null,
+          });
         }
       }
     },
@@ -187,8 +201,10 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
         if (updatedElm) updateElement(id, updatedElm);
       }
     }
-    setSelectedElm(null);
-    setIsDrawing(false);
+    if (mode !== MODES.text) {
+      setSelectedElm(null);
+      setIsDrawing(false);
+    }
   };
 
   const updateElement = useCallback(
@@ -213,18 +229,19 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
       if (mode === MODES.selection) {
         const element = CanvasUtils.getElementAtPosition(x, y, elements);
         const nearByElement = CanvasUtils.findElementNearBy(x, y, elements);
-        event.currentTarget.style.cursor = nearByElement?.angle
-          ? CanvasUtils.cursorForPosition(nearByElement.angle)
-          : element
-          ? 'move'
-          : 'default';
+        if (nearByElement?.elm.mode !== MODES.text)
+          event.currentTarget.style.cursor = nearByElement?.angle
+            ? CanvasUtils.cursorForPosition(nearByElement.angle)
+            : element
+            ? 'move'
+            : 'default';
       }
       if (!isDrawing) return;
 
       if (mode === MODES.selection) {
         if (!selectedElm) return;
-        const { id, mode, x1, y1, x2, y2, offsetX, offsetY, position } = selectedElm;
-        if (position) {
+        const { id, mode, x1, y1, x2, y2, offsetX, offsetY, position, text } = selectedElm;
+        if (position && mode !== MODES.text) {
           // nearby
           const coordinates = CanvasUtils.resizedCoordinates(x, y, position, { x1, y1, x2, y2 });
           if (!coordinates) return;
@@ -235,6 +252,7 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
             coordinates.x2,
             coordinates.y2,
             mode,
+            text,
           );
           if (updatedElm) {
             updateElement(id, updatedElm);
@@ -246,7 +264,15 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
           const newX = x - offsetX;
           const newY = y - offsetY;
 
-          const updatedElm = createNewElement(id, newX, newY, newX + width, newY + height, mode);
+          const updatedElm = createNewElement(
+            id,
+            newX,
+            newY,
+            newX + width,
+            newY + height,
+            mode,
+            text,
+          );
           if (updatedElm) {
             updateElement(id, updatedElm);
           }
@@ -265,6 +291,44 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
       }
     },
     [canvasRef, elements, isDrawing, createNewElement, mode, selectedElm, updateElement],
+  );
+
+  const handleBlur = (e: React.FocusEvent<HTMLTextAreaElement>) => {
+    if (!selectedElm) {
+      return;
+    }
+    const { id, mode, x1, y1 } = selectedElm;
+    const updatedElm = createNewElement(id, x1, y1, x1, y1, mode, e.target?.value || '');
+    setIsDrawing(false);
+    setSelectedElm(null);
+    if (!updatedElm) return;
+    updateElement(id, updatedElm);
+  };
+
+  const drawElement = useCallback(
+    (element: ElementType) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas?.getContext('2d');
+      if (!ctx) return;
+      switch (element.mode) {
+        case MODES.line:
+        case MODES.rectangle:
+          if (!element.roughElement) return;
+          roughCanvas?.current?.draw(element.roughElement);
+          break;
+        case MODES.text: {
+          ctx.textBaseline = 'top';
+          ctx.font = '24px sans-serif';
+          ctx.fillStyle = theme === 'dark' ? 'white' : 'black';
+          ctx.fillText(element.text || '', element.x1, element.y1);
+          break;
+        }
+        default:
+          throw new Error(`mode not recognised: ${element.mode}`);
+      }
+    },
+    [canvasRef, theme],
   );
 
   const handleUndo = () => {
@@ -289,6 +353,7 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
             item.x2,
             item.y2,
             item.mode as keyof typeof MODES,
+            item.text,
           )!!,
       ) || [],
     );
@@ -331,7 +396,7 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
   useEffect(() => {
     const elm = elements.map(
       (item): ElementType =>
-        createNewElement(item.id, item.x1, item.y1, item.x2, item.y2, item.mode)!!,
+        createNewElement(item.id, item.x1, item.y1, item.x2, item.y2, item.mode, item.text)!!,
     );
     handleSetElements(elm);
   }, [theme]);
@@ -342,16 +407,18 @@ const useCanvas = ({ canvasRef, width, canvasId }: Props) => {
     const ctx = canvas?.getContext('2d');
     if (!ctx) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    elements.map(({ roughElement }) => {
-      roughCanvas?.current?.draw(roughElement);
+    elements.map((element) => {
+      drawElement(element);
     });
-    console.log('calling');
-    delayedSave(elements);
 
+    delayedSave(elements);
     return delayedSave.cancel;
-  }, [elements, roughCanvas, canvasRef, width, delayedSave]);
+  }, [elements, roughCanvas, canvasRef, width, delayedSave, drawElement]);
 
   return {
+    mode,
+    selectedElm,
+    handleBlur,
     handleMouseDown,
     handleMouseMove,
     handleMouseUp,

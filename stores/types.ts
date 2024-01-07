@@ -17,5 +17,6 @@ export interface ElementType {
   x2: number;
   y2: number;
   mode: keyof typeof MODES;
-  roughElement: Drawable;
+  roughElement?: Drawable;
+  text?: string;
 }
