@@ -7,7 +7,7 @@ import { globalState } from '@/stores/globalStore';
 import ModeToggle from '@/app/project/[projectId]/__components/ThemeToggle';
 import Link from 'next/link';
 import { LogOut } from 'lucide-react';
-import { signOut } from 'next-auth/react';
+import { SignOutButton } from '@clerk/nextjs';
 import { useParams } from 'next/navigation';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
@@ -73,7 +73,9 @@ const Header: React.FC = () => {
       ) : null}
       <div className={'flex gap-2 items-center'}>
         <ModeToggle />
-        <LogOut className={'cursor-pointer'} onClick={() => signOut()} />
+        <SignOutButton>
+          <LogOut className={'cursor-pointer'} onClick={() => console} />
+        </SignOutButton>
         <Link href={'/profile'}>
           <UserAvatar />
         </Link>

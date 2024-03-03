@@ -10,7 +10,7 @@
     "format": "prettier --write \"app/**/*.{js,jsx,ts,tsx,css,md,json,scss}\" --config ./.prettierrc"
   },
   "dependencies": {
-    "@clerk/clerk-react": "^4.30.7",
+    "@clerk/nextjs": "^4.29.9",
     "@clerk/types": "^3.62.1",
     "@radix-ui/react-avatar": "^1.0.4",
     "@radix-ui/react-dialog": "^1.0.5",

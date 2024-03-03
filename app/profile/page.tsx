@@ -5,7 +5,7 @@ import { useMemo } from 'react';
 import { unixToStringFormat } from '@/lib/utils';
 import { api } from '@/convex/_generated/api';
 import UserProfile from './__components/UserDetails';
-import { useUser } from '@clerk/clerk-react';
+import { useUser } from '@clerk/nextjs';
 
 const Profile = () => {
   const { user } = useUser();
