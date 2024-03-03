@@ -1,13 +1,11 @@
 'use client';
 import { TypographyH4 } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/button';
-import UserAvatar from './Avatar';
 import { useAtom } from 'jotai';
 import { globalState } from '@/stores/globalStore';
 import ModeToggle from '@/app/project/[projectId]/__components/ThemeToggle';
 import Link from 'next/link';
-import { LogOut } from 'lucide-react';
-import { SignOutButton } from '@clerk/nextjs';
+import { UserButton } from '@clerk/nextjs';
 import { useParams } from 'next/navigation';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
@@ -73,11 +71,8 @@ const Header: React.FC = () => {
       ) : null}
       <div className={'flex gap-2 items-center'}>
         <ModeToggle />
-        <SignOutButton>
-          <LogOut className={'cursor-pointer'} onClick={() => console} />
-        </SignOutButton>
         <Link href={'/profile'}>
-          <UserAvatar />
+          <UserButton afterSignOutUrl='/home' />
         </Link>
       </div>
     </div>
