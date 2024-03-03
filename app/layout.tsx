@@ -9,7 +9,7 @@ import JotaiProvider from './components/JotaiProvider';
 import ConvexClientProvider from '@/app/components/ConvexClientProvider';
 import { Toaster } from '@/components/ui/toaster';
 
-export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
+function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
 }
 
@@ -29,14 +29,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={cn('h-screen font-sans antialiased', inter.variable)}>
         <Toaster />
         <JotaiProvider>
-          <ThemeProvider
-            attribute='class'
-            defaultTheme='light'
-            enableSystem
-            disableTransitionOnChange
-          >
-            <ConvexClientProvider>{children}</ConvexClientProvider>
-          </ThemeProvider>
+          <ConvexClientProvider>
+            <ThemeProvider
+              attribute='class'
+              defaultTheme='light'
+              enableSystem
+              disableTransitionOnChange
+            >
+              {children}
+            </ThemeProvider>
+          </ConvexClientProvider>
         </JotaiProvider>
       </body>
     </html>
