@@ -12,7 +12,6 @@ import { ElementType } from '@/stores/types';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
 import { useMutation, useQuery } from 'convex/react';
-import { useSession } from 'next-auth/react';
 import { CanvasElementsType } from '@/convex/tasks';
 import { debounce } from 'lodash';
 import useHistory from '@/app/hooks/useHistory';
@@ -52,7 +51,7 @@ const useCanvas = ({ canvasRef, width, canvasId, textAreaRef }: Props) => {
     },
   ]);
 
-  const { data: session } = useSession();
+  const { data: session } = { data: {} };
 
   const [store, setStore] = useAtom(globalState);
   const updateCanvas = useMutation(api.tasks.updateCanvas);

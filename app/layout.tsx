@@ -5,8 +5,6 @@ import './globals.css';
 import { cn } from '@/lib/utils';
 import { ThemeProvider as NextThemesProvider } from 'next-themes';
 import { type ThemeProviderProps } from 'next-themes/dist/types';
-
-import NextAuthProvider from './components/NextAuthProvider';
 import JotaiProvider from './components/JotaiProvider';
 import ConvexClientProvider from '@/app/components/ConvexClientProvider';
 import { Toaster } from '@/components/ui/toaster';
@@ -30,18 +28,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang='en'>
       <body className={cn('h-screen font-sans antialiased', inter.variable)}>
         <Toaster />
-        <NextAuthProvider>
-          <JotaiProvider>
-            <ThemeProvider
-              attribute='class'
-              defaultTheme='light'
-              enableSystem
-              disableTransitionOnChange
-            >
-              <ConvexClientProvider>{children}</ConvexClientProvider>
-            </ThemeProvider>
-          </JotaiProvider>
-        </NextAuthProvider>
+        <JotaiProvider>
+          <ThemeProvider
+            attribute='class'
+            defaultTheme='light'
+            enableSystem
+            disableTransitionOnChange
+          >
+            <ConvexClientProvider>{children}</ConvexClientProvider>
+          </ThemeProvider>
+        </JotaiProvider>
       </body>
     </html>
   );

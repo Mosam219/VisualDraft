@@ -1,5 +1,6 @@
 'use client';
 import { Button } from '@/components/ui/button';
+import { useUser } from '@clerk/clerk-react';
 import {
   Dialog,
   DialogClose,
@@ -15,7 +16,6 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { api } from '@/convex/_generated/api';
 import { useMutation } from 'convex/react';
-import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -26,7 +26,7 @@ interface SFormState {
 const NewCanvasDialog = () => {
   const [formState, setFormState] = useState<SFormState>({} as SFormState);
   const createCanvas = useMutation(api.tasks.createCanvas);
-  const session = useSession();
+  const { user } = useUser();
   const { toast } = useToast();
   const { push } = useRouter();
 
@@ -37,7 +37,7 @@ const NewCanvasDialog = () => {
     }));
   };
   const createNewProject = async () => {
-    const userId = session.data?.user.id;
+    const userId = user?.id;
     if (!userId) return;
     try {
       const id = await createCanvas({
