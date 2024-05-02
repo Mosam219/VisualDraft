@@ -12,7 +12,7 @@ import { ElementType } from '@/stores/types';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
 import { useMutation, useQuery } from 'convex/react';
-import { CanvasElementsType } from '@/convex/tasks';
+import { CanvasElementsType } from '@/convex/projects';
 import { debounce } from 'lodash';
 import useHistory from '@/app/hooks/useHistory';
 import useKeyShortCut from '@/app/hooks/useKeyShortCut';
@@ -54,9 +54,9 @@ const useCanvas = ({ canvasRef, width, canvasId, textAreaRef }: Props) => {
   const { data: session } = { data: {} };
 
   const [store, setStore] = useAtom(globalState);
-  const updateCanvas = useMutation(api.tasks.updateCanvas);
+  const updateCanvas = useMutation(api.projects.updateCanvas);
 
-  const storedCanvas = useQuery(api.tasks.getDoc, { id: canvasId as Id<'canvas'> });
+  const storedCanvas = useQuery(api.projects.getDoc, { id: canvasId as Id<'project'> });
 
   const {
     mode,
@@ -94,7 +94,7 @@ const useCanvas = ({ canvasRef, width, canvasId, textAreaRef }: Props) => {
     try {
       await updateCanvas({
         elements: canvasElms,
-        docId: canvasId as Id<'canvas'>,
+        docId: canvasId as Id<'project'>,
       });
     } catch (e) {
       console.log(e);

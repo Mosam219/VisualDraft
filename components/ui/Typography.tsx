@@ -15,7 +15,7 @@ const TypographyH4 = ({ text }: { text: string }) => {
 };
 
 const TypographyP = ({ text }: { text: string }) => {
-  return <p className='leading-7 [&:not(:first-child)]:mt-6'>{text}</p>;
+  return <p className='leading-7'>{text}</p>;
 };
 
 export { TypographyH1, TypographyH2, TypographyH3, TypographyH4, TypographyP };

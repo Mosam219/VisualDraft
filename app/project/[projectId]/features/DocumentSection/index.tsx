@@ -39,11 +39,11 @@ const DocumentSection: React.FC<{ docId: string }> = ({ docId }) => {
   // }, []);
   const [firstLoad, setFirstLoad] = useState<boolean>(true);
   const { quill, quillRef } = useQuill({ modules: { toolbar: TOOLBAR_OPTIONS }, theme: 'snow' });
-  const updateDoc = useMutation(api.tasks.updateDoc);
-  const getDoc = useQuery(api.tasks.getDoc, { id: docId as Id<'canvas'> });
+  const updateDoc = useMutation(api.projects.updateDoc);
+  const getDoc = useQuery(api.projects.getDoc, { id: docId as Id<'project'> });
   const saveToDb = async (content: string) => {
     console.log('saving to db', content, docId);
-    await updateDoc({ content: content, docId: docId as Id<'canvas'> });
+    await updateDoc({ content: content, docId: docId as Id<'project'> });
   };
   const delayedSave = debounce(async (content: string) => {
     console.log('updating');

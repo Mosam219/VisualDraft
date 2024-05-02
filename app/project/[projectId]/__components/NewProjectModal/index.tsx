@@ -18,14 +18,18 @@ import { api } from '@/convex/_generated/api';
 import { useMutation } from 'convex/react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { Id } from '@/convex/_generated/dataModel';
 
 interface SFormState {
   name: string;
 }
+interface Props {
+  teamId: string;
+}
 
-const NewCanvasDialog = () => {
+const NewProject: React.FC<Props> = ({ teamId }) => {
   const [formState, setFormState] = useState<SFormState>({} as SFormState);
-  const createCanvas = useMutation(api.tasks.createCanvas);
+  const createProject = useMutation(api.projects.createProject);
   const { user } = useUser();
   const { toast } = useToast();
   const { push } = useRouter();
@@ -40,11 +44,12 @@ const NewCanvasDialog = () => {
     const userId = user?.id;
     if (!userId) return;
     try {
-      const id = await createCanvas({
+      const id = await createProject({
         docContent: '',
         elements: [],
         name: formState.name,
-        userId: userId,
+        createdBy: user?.primaryEmailAddress?.emailAddress || '',
+        teamId: teamId as Id<'teams'>,
       });
       push(`/project/${id}`);
       toast({ title: 'New Canvas Created' });
@@ -86,4 +91,4 @@ const NewCanvasDialog = () => {
     </Dialog>
   );
 };
-export default NewCanvasDialog;
+export default NewProject;

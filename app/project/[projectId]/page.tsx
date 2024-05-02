@@ -11,7 +11,7 @@ function CanvasPage({
   params: { projectId },
 }: {
   params: {
-    projectId: Id<'canvas'>;
+    projectId: Id<'project'>;
   };
 }) {
   const [store] = useAtom(globalState);

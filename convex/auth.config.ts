@@ -1,7 +1,7 @@
 export default {
   providers: [
     {
-      domain: 'https://aware-ladybug-43.clerk.accounts.dev',
+      domain: process.env.NEXT_CLERK_JWT_ISSUER_DOMAIN,
       applicationID: 'convex',
     },
   ],

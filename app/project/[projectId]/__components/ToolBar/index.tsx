@@ -22,7 +22,7 @@ const ToolBar: React.FC<Props> = ({ undo, redo }) => {
     setStore,
   ] = useAtom(globalState);
 
-  const createCanvas = useMutation(api.tasks.createCanvas);
+  const createProject = useMutation(api.projects.createProject);
 
   const changeMode = useCallback(
     (mode: string) => {
