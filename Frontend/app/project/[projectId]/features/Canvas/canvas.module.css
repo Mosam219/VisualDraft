@@ -1,0 +1,10 @@
+.canvas{
+    image-rendering: -moz-crisp-edges;
+    image-rendering: -o-crisp-edges;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: pixelated;
+    -ms-interpolation-mode: nearest-neighbor;
+    object-fit: contain;
+
+    @apply  min-w-[100%] max-w-[100%];
+}

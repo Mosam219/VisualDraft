@@ -1,0 +1,10 @@
+.ql-toolbar{
+    height: 5%;
+    border: none !important;
+}
+.ql-container{
+    height: 95%;
+    font-family: unset;
+    border: none !important;
+    max-width: 100%;
+}
